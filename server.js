@@ -22,7 +22,7 @@ app.post("/webhook", async (req, res) => {
 
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
 
-    switch (chatWithPAW === false) {
+    switch (message.type === "text" && chatWithPAW === false) {
       default:
         const business_phone_number_id =
           req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
