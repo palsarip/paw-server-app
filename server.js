@@ -28,13 +28,83 @@ app.post("/webhook", async (req, res) => {
 
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
 
-    switch (chatWithPAW) {
-        case (chatWithPAW === true): 
-        console.log("chatWithPAW", chatWithPAW)
-      default:
-        const business_phone_number_id =
-          req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
+    if (message?.type === "text" && chatWithPAW === false) {
+      const business_phone_number_id =
+        req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
 
+      await axios({
+        method: "POST",
+        url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+        headers: {
+          Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+        },
+        data: {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: message?.from ?? "WhatsApp User",
+          type: "interactive",
+          interactive: {
+            type: "button",
+            body: {
+              text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
+            },
+            action: {
+              buttons: [
+                {
+                  type: "reply",
+                  reply: {
+                    id: "GAMES",
+                    title: "Games 🕹️",
+                  },
+                },
+                {
+                  type: "reply",
+                  reply: {
+                    id: "CHAT_WITH_PAW",
+                    title: "Chat with PAW 🤖",
+                  },
+                },
+                // {
+                //   type: "reply",
+                //   reply: {
+                //     id: "LIVE_CHAT",
+                //     title: "Live Chat",
+                //   },
+                // },
+              ],
+            },
+          },
+        },
+        context: {
+          message_id: message.id,
+        },
+      });
+
+      await axios({
+        method: "POST",
+        url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
+        headers: {
+          Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+        },
+        data: {
+          messaging_product: "whatsapp",
+          status: "read",
+          message_id: message.id,
+        },
+      });
+    } else if (message?.type === "text" && chatWithPAW === true) {
+      console.log("ngobrol ama PAW");
+    }
+
+    if (message?.type === "interactive" && chatWithPAW === false) {
+      const buttonReplyId =
+        req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
+          .id;
+      
+            const business_phone_number_id =
+        req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
+
+      if (buttonReplyId === "INFORMASI_GIT") {
         await axios({
           method: "POST",
           url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
@@ -44,12 +114,12 @@ app.post("/webhook", async (req, res) => {
           data: {
             messaging_product: "whatsapp",
             recipient_type: "individual",
-            to: message.from ?? "WhatsApp User",
+            to: message.from ?? "Whatsapp User",
             type: "interactive",
             interactive: {
               type: "button",
               body: {
-                text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
+                text: "Apa yang mau kamu ketahui tentang PT. Global Innovation Technology?",
               },
               action: {
                 buttons: [
@@ -57,23 +127,23 @@ app.post("/webhook", async (req, res) => {
                     type: "reply",
                     reply: {
                       id: "GAMES",
-                      title: "Games 🕹️",
+                      title: "Profil Perusahaan 🏢",
                     },
                   },
                   {
                     type: "reply",
                     reply: {
-                      id: "CHAT_WITH_PAW",
-                      title: "Chat with PAW 🤖",
+                      id: "PRODUK_DAN_LAYANAN",
+                      title: "Produk & Layanan 💻",
                     },
                   },
-                  // {
-                  //   type: "reply",
-                  //   reply: {
-                  //     id: "LIVE_CHAT",
-                  //     title: "Live Chat",
-                  //   },
-                  // },
+                  {
+                    type: "reply",
+                    reply: {
+                      id: "LOKASI",
+                      title: "Lokasi 📍",
+                    },
+                  },
                 ],
               },
             },
@@ -82,25 +152,10 @@ app.post("/webhook", async (req, res) => {
             message_id: message.id,
           },
         });
+      }
 
-        await axios({
-          method: "POST",
-          url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
-          headers: {
-            Authorization: `Bearer ${GRAPH_API_TOKEN}`,
-          },
-          data: {
-            messaging_product: "whatsapp",
-            status: "read",
-            message_id: message.id,
-          },
-        });
-        break;
-      case chatWithPAW === true:
-        console.log("chatWithPAW", chatWithPAW);
+      res.sendStatus(200);
     }
-
-    res.sendStatus(200);
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.sendStatus(500);
