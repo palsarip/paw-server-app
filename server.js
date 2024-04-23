@@ -33,7 +33,7 @@ let userList = [
 
 const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   try {
-  
+    console.log(message, ' ', business_phone_number_id);
 
     await axios({
       method: "POST",
@@ -50,7 +50,7 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
           type: "button",
           body: {
             // text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
-            text: "halo"
+            text: yangMauDikirim
           },
           action: {
             buttons: [
@@ -86,6 +86,7 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
       url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
       headers: {
         Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+        
       },
       data: {
         messaging_product: "whatsapp",
@@ -242,7 +243,8 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
-    const business_phone_number_id = message.metadata?.phone_number_id;
+    const business_phone_number_id =
+        req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
     const queriedUser = message?.from;
 
     let userExists = null;
@@ -263,19 +265,21 @@ app.post("/webhook", async (req, res) => {
         chatWithPAW: false,
         from: message?.from,
       });
+      welcome(message,business_phone_number_id,"welcome jink");
     } else {
       if (userData.chatWithPAW) {
         welcome(message,business_phone_number_id,"kamu lagi chattingan ama paw jink");
       }
 
-      if (message.text.body === "1") {
+      if (message?.text.body === "1") {
+        
         userData.chatWithPAW = true;
         welcome(message,business_phone_number_id,"kamu akan chat dengan PAW, ad yang bisa dibantu?");
       }
+      welcome(message,business_phone_number_id,"apa si");
       
     }
     
-    welcome(message,business_phone_number_id,"welcome jink");
     
     console.log("\n end of loop \n");
     
