@@ -20,59 +20,66 @@ const {
 } = process.env;
 
 /* Variables */
-let chatWithPAW = false;
 
 let userList = [
   {
     message: "",
-    chatWithPAW: null,
-    from:""
+    chatWithPAW: false,
+    from: "",
   },
 ];
 
+function 
+
 app.post("/webhook", async (req, res) => {
   try {
-
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
     const queriedUser = message.from;
-    
+
     let userExists = null;
+    let userData;
 
     for (let i = 0; i < userList.length; i++) {
       if (userList[i].from === queriedUser) {
+        userData = userList[i];
         userExists = true;
-        break; // No need to continue once the user is found
+        break;
       }
     }
-    
-    console.log("queriedUser:", queriedUser);
 
-    console.log("userExists:", userExists);
-    
-    if(!userExists){
-      console.log('user not exist');
+    if (!userExists) {
+      console.log("user not exist");
       userList.push({
         message: message.text.body,
-        chatWithPAW: false, 
-        from: message.from, 
+        chatWithPAW: false,
+        from: message.from,
       });
-    }else{
-      console.log('user chatted before');
-      console.log(userList); 
-    }
-    
-    
+    } else {
+      if (userData.chatWithPAW) {
+        console.log("this person is currently chatting with PAW");
+        // function untuk proses chatting dengan bot
+        
+        
+      } else {
+        console.log(
+          " welcome welcome bla bla apakah anda ingin chat dengan PAW? jika iya tekan 1"
+        );
+      }
 
+      if (message.text.body === "1") {
+        // Change user data: set chatWithPAW to true
+        userData.chatWithPAW = true;
+        console.log("You're now chatting with PAW.");
+        // Optionally, you may want to notify the user that they're now chatting with PAW
+      }
+    }
+    console.log('\n end of loop \n');
     res.sendStatus(200);
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.sendStatus(500);
   }
 });
-
-console.log('userlist',userList);
-
-
 
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
