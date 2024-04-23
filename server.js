@@ -219,9 +219,16 @@ app.post("/webhook", async (req, res) => {
         });
 
         while (chatWithPAW === true) {
-          let userPromptMessage =
-            req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+          let userPromptMessage = [];
           let AIReplyMessage = "";
+
+          const userMessages =
+            req.body.entry?.[0]?.changes[0]?.value?.messages || [];
+          userMessages.forEach((msg) => {
+            if (msg.text) {
+              userPromptMessage.push(msg.text);
+            }
+          });
 
           const AIReplyFetchedData = await axios({
             method: "POST",
@@ -231,12 +238,10 @@ app.post("/webhook", async (req, res) => {
             },
             data: {
               model: "gpt-3.5-turbo",
-              messages: [
-                {
-                  role: "user",
-                  content: userPromptMessage,
-                },
-              ],
+              messages: userPromptMessage.map((msg) => ({
+                role: "user",
+                content: msg,
+              })),
               temperature: 0.7,
             },
           });
@@ -249,8 +254,8 @@ app.post("/webhook", async (req, res) => {
             "AI Reply:",
             AIReplyFetchedData.data.choices[0].message.content
           );
-          
-          AIReplyMessage = AIReplyFetchedData.data.choices[0].message.content
+
+          AIReplyMessage = AIReplyFetchedData.data.choices[0].message.content;
 
           const userPromptFetchedData = await axios({
             method: "POST",
