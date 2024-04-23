@@ -22,25 +22,33 @@ const {
 /* Variables */
 let chatWithPAW = false;
 
+let arrayOfMessage = [
+  {
+    id: "",
+    message: "",
+    chatWithPAW: null,
+  },
+];
+
 app.post("/webhook", async (req, res) => {
-  
-  let arrayOfMessage = [{
-      message: "",
-      chatWithPAW: null,
-      from: ""
-    }];
-  
   try {
     // console.log("Incoming webhook message:", JSON.stringify(req.body, null, 2));
 
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
-    
-    
-    
-    console.log("message:", message);
-    
-    return null;
-    
+
+    // Assuming message is an object with properties like 'message', 'chatWithPAW', and 'from'
+    if (message) {
+      // Pushing the message object into the arrayOfMessage array
+      arrayOfMessage.push({
+        message: message.text.body, // Assuming 'message' property exists in 'message' object
+        chatWithPAW: message.chatWithPAW, // Assuming 'chatWithPAW' property exists in 'message' object
+        from: message.from, // Assuming 'from' property exists in 'message' object
+      });
+    }
+
+    // console.log("message:", message);
+    console.log(arrayOfMessage);
+
     if (message?.type === "text" && chatWithPAW === false) {
       const business_phone_number_id =
         req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
@@ -167,6 +175,8 @@ app.post("/webhook", async (req, res) => {
         });
       } else if (buttonReplyId === "CHAT_WITH_PAW") {
         chatWithPAW = true;
+      
+        arrayOfMessage.chatWithPaw = true;
 
         let initialAIMessage = "";
 
