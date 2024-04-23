@@ -100,8 +100,8 @@ app.post("/webhook", async (req, res) => {
       const buttonReplyId =
         req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
           .id;
-      
-            const business_phone_number_id =
+
+      const business_phone_number_id =
         req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
 
       if (buttonReplyId === "GAMES") {
@@ -127,14 +127,14 @@ app.post("/webhook", async (req, res) => {
                     type: "reply",
                     reply: {
                       id: "MOBA",
-                      title: "MOBA",
+                      title: "MOBA 🚩",
                     },
                   },
                   {
                     type: "reply",
                     reply: {
                       id: "FPS",
-                      title: "VALORANT",
+                      title: "FPS 🔫",
                     },
                   },
                   // {
@@ -152,14 +152,38 @@ app.post("/webhook", async (req, res) => {
             message_id: message.id,
           },
         });
-      }
+      } else if (buttonReplyId === "CHAT_WITH_PAW") {
+        chatWithPAW = true;
 
-      res.sendStatus(200);
-    } else if (message?.type === "interactive" && chatWithPAW === true) {
-      
+        const fetchedData = await axios({
+          method: "POST",
+          url: `https://api.openai.com/v1/chat/completions`,
+          headers: {
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          data: {
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "user",
+                content: "Halo, aku mau ngobrol sama kamu!",
+              },
+            ],
+            temperature: 0.7,
+          },
+        });
+
+        console.log("fetched: ", fetchedData.data.choices[0].message.content);
+        
+        
+      }
+    } 
+    
+    else if (message?.type === "interactive" && chatWithPAW === true) {
     }
-    
-    
+
+    console.log("Current chatWithPAW is", chatWithPAW);
+    res.sendStatus(200);
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.sendStatus(500);
