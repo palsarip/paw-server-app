@@ -22,32 +22,39 @@ const {
 /* Variables */
 let chatWithPAW = false;
 
-let arrayOfMessage = [
+let userList = [
   {
-    id: "",
     message: "",
     chatWithPAW: null,
+    from:""
   },
 ];
 
 app.post("/webhook", async (req, res) => {
   try {
-    // console.log("Incoming webhook message:", JSON.stringify(req.body, null, 2));
 
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
-
-    // Assuming message is an object with properties like 'message', 'chatWithPAW', and 'from'
-    if (message) {
-      // Pushing the message object into the arrayOfMessage array
-      arrayOfMessage.push({
-        message: message.text.body, // Assuming 'message' property exists in 'message' object
-        chatWithPAW: message.chatWithPAW, // Assuming 'chatWithPAW' property exists in 'message' object
-        from: message.from, // Assuming 'from' property exists in 'message' object
+    const user = message.from;
+    
+    //check user is exist in json or not with "from"
+    
+    if(!user exist in userList){
+      userList.push({
+        message: message.text.body,
+        chatWithPAW: false, 
+        from: message.from, 
       });
     }
-
-    // console.log("message:", message);
-    console.log(arrayOfMessage);
+    
+    
+    
+    
+    
+    //if "from" has same data with any data inside json
+    
+    //if new user, append json
+    
+    //if user has messaged before, default reply, but dont append json
 
 
     res.sendStatus(200);
@@ -56,6 +63,11 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+
+
+
+
 
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
