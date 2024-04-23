@@ -104,7 +104,7 @@ app.post("/webhook", async (req, res) => {
             const business_phone_number_id =
         req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
 
-      if (buttonReplyId === "INFORMASI_GIT") {
+      if (buttonReplyId === "GAMES") {
         await axios({
           method: "POST",
           url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
@@ -119,31 +119,31 @@ app.post("/webhook", async (req, res) => {
             interactive: {
               type: "button",
               body: {
-                text: "Apa yang mau kamu ketahui tentang PT. Global Innovation Technology?",
+                text: "Halo! Selamat datang di layanan chatbot kami. Saya adalah asisten virtual yang siap membantu Anda.\n\nUntuk memulai, pilih salah satu opsi di bawah ini: \n\n1. 🎮 MOBA \n2. 🔫 FPS \n\nSilakan ketik nomor yang sesuai dengan opsi yang Anda inginkan atau pilih dari tombol di bawah ini.",
               },
               action: {
                 buttons: [
                   {
                     type: "reply",
                     reply: {
-                      id: "GAMES",
-                      title: "Profil Perusahaan 🏢",
+                      id: "MOBA",
+                      title: "MOBA",
                     },
                   },
                   {
                     type: "reply",
                     reply: {
-                      id: "PRODUK_DAN_LAYANAN",
-                      title: "Produk & Layanan 💻",
+                      id: "FPS",
+                      title: "VALORANT",
                     },
                   },
-                  {
-                    type: "reply",
-                    reply: {
-                      id: "LOKASI",
-                      title: "Lokasi 📍",
-                    },
-                  },
+                  // {
+                  //   type: "reply",
+                  //   reply: {
+                  //     id: "OPEN_WORLD",
+                  //     title: "Lokasi 📍",
+                  //   },
+                  // },
                 ],
               },
             },
@@ -155,7 +155,11 @@ app.post("/webhook", async (req, res) => {
       }
 
       res.sendStatus(200);
+    } else if (message?.type === "interactive" && chatWithPAW === true) {
+      
     }
+    
+    
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.sendStatus(500);
