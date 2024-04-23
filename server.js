@@ -176,7 +176,7 @@ app.post("/webhook", async (req, res) => {
         });
 
         console.log(
-          "fetched: ",
+          "Initial AI Reply: ",
           initialFetchedAIData.data.choices[0].message.content
         );
         initialAIMessage = initialFetchedAIData.data.choices[0].message.content;
@@ -249,6 +249,8 @@ app.post("/webhook", async (req, res) => {
             "AI Reply:",
             AIReplyFetchedData.data.choices[0].message.content
           );
+          
+          AIReplyMessage = AIReplyFetchedData.data.choices[0].message.content
 
           const userPromptFetchedData = await axios({
             method: "POST",
