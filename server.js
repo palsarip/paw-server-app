@@ -234,7 +234,7 @@ app.post("/webhook", async (req, res) => {
               messages: [
                 {
                   role: "user",
-                  content: "hey hooooo",
+                  content: userPromptMessage,
                 },
               ],
               temperature: 0.7,
@@ -249,8 +249,6 @@ app.post("/webhook", async (req, res) => {
             "AI Reply:",
             AIReplyFetchedData.data.choices[0].message.content
           );
-
-          AIReplyMessage = AIReplyFetchedData.data.choices[0].message.content;
 
           const userPromptFetchedData = await axios({
             method: "POST",
