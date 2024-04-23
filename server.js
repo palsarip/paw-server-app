@@ -155,6 +155,69 @@ app.post("/webhook", async (req, res) => {
       } else if (buttonReplyId === "CHAT_WITH_PAW") {
         chatWithPAW = true;
 
+        let initialAIMessage = "";
+
+        const initialFetchedAIData = await axios({
+          method: "POST",
+          url: `https://api.openai.com/v1/chat/completions`,
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          data: {
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "user",
+                content: "Halo, aku mau ngobrol sama kamu!",
+              },
+            ],
+            temperature: 0.7,
+          },
+        });
+
+        console.log(
+          "fetched: ",
+          initialFetchedAIData.data.choices[0].message.content
+        );
+        initialAIMessage = initialFetchedAIData.data.choices[0].message.content;
+
+        await axios({
+          method: "POST",
+          url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+          headers: {
+            Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+          },
+          data: {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: message.from ?? "Whatsapp User",
+            type: "interactive",
+            interactive: {
+              type: "button",
+              body: {
+                text: initialAIMessage,
+              },
+              footer: {
+                text: "Powered by ChatGPT-3.5",
+              },
+              action: {
+                buttons: [
+                  {
+                    type: "reply",
+                    reply: {
+                      id: "STOP_CHAT_WITH_PAW",
+                      title: "Berhenti ngobrol",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          context: {
+            message_id: message.id,
+          },
+        });
+
         while (chatWithPAW === true) {
           let userPromptMessage =
             req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
@@ -171,16 +234,22 @@ app.post("/webhook", async (req, res) => {
               messages: [
                 {
                   role: "user",
-                  content: userPromptMessage,
+                  content: "hey hooooo",
                 },
               ],
               temperature: 0.7,
             },
           });
-          
-          
-          console.log()
-          console.log("AI Reply:", AIReplyFetchedData.data.choices[0].message.content);
+
+          console.log(
+            "User Prompt:",
+            req.body.entry?.[0]?.changes[0]?.value?.messages?.[0]
+          );
+          console.log(
+            "AI Reply:",
+            AIReplyFetchedData.data.choices[0].message.content
+          );
+
           AIReplyMessage = AIReplyFetchedData.data.choices[0].message.content;
 
           const userPromptFetchedData = await axios({
@@ -225,9 +294,9 @@ app.post("/webhook", async (req, res) => {
 
         await axios({
           method: "POST",
-          url: `https://graph.facebook.com/v${process.env.CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+          url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
           headers: {
-            Authorization: `Bearer ${process.env.GRAPH_API_TOKEN}`,
+            Authorization: `Bearer ${GRAPH_API_TOKEN}`,
           },
           data: {
             messaging_product: "whatsapp",
