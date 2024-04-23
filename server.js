@@ -34,7 +34,7 @@ let userList = [
 const chatWithAi = async (message) =>  {
   try{
     
-    ""
+    console.log("ini udah masuk ke ai");
     const initialFetchedAIData = await axios({
       method: "POST",
       url: `https://api.openai.com/v1/chat/completions`,
@@ -46,13 +46,13 @@ const chatWithAi = async (message) =>  {
         messages: [
           {
             role: "user",
-            content: message,
+            content: "say hi back",
           },
         ],
         temperature: 0.7,
       },
     });
-    
+    console.log(initialFetchedAIData);
     return initialFetchedAIData;
   }catch(error){
     console.log("error dari function chatWithAi: ", error.message);
@@ -62,7 +62,6 @@ const chatWithAi = async (message) =>  {
 
 const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   try {
-    console.log(message, ' ', business_phone_number_id);
 
     await axios({
       method: "POST",
@@ -298,9 +297,30 @@ app.post("/webhook", async (req, res) => {
     } else {
       if (userData.chatWithPAW) {
         const AIrespond = chatWithAi(message?.text.body);
-        console.log("respon ai: ", AIrespond);
         welcome(message,business_phone_number_id,"ini respon:");
-        welcome(message,business_phone_number_id,AIrespond);
+        const initialFetchedAIData = await axios({
+          method: "POST",
+          url: `https://api.openai.com/v1/chat/completions`,
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+          },
+          data: {
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "user",
+                content: message?.text.body,
+              },
+            ],
+            temperature: 0.7,
+          },
+        });
+        console.log(initialFetchedAIData.data.choices[0].message.content);
+        welcome(message,business_phone_number_id,initialFetchedAIData.data.choices[0].message.content);
+        
+      
+        
+        // welcome(message,business_phone_number_id,AIrespond);
       }
 
       if (message?.text.body === "1") {
