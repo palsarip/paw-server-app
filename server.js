@@ -155,7 +155,9 @@ app.post("/webhook", async (req, res) => {
       } else if (buttonReplyId === "CHAT_WITH_PAW") {
         chatWithPAW = true;
 
-        const fetchedData = await axios({
+        let initialAIMessage = "";
+
+        const initialFetchedAIData = await axios({
           method: "POST",
           url: `https://api.openai.com/v1/chat/completions`,
           headers: {
@@ -173,14 +175,114 @@ app.post("/webhook", async (req, res) => {
           },
         });
 
-        console.log("fetched: ", fetchedData.data.choices[0].message.content);
-        
-        
+        console.log(
+          "fetched: ",
+          initialFetchedAIData.data.choices[0].message.content
+        );
+        initialAIMessage = initialFetchedAIData.data.choices[0].message.content;
+
+        await axios({
+          method: "POST",
+          url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+          headers: {
+            Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+          },
+          data: {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: message.from ?? "Whatsapp User",
+            type: "interactive",
+            interactive: {
+              type: "button",
+              body: {
+                text: initialAIMessage,
+              },
+              footer: {
+                text: "Powered by ChatGPT-3.5",
+              },
+              action: {
+                buttons: [
+                  {
+                    type: "reply",
+                    reply: {
+                      id: "STOP_NGOBROL_SAMA_GITA",
+                      title: "Berhenti ngobrol",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          context: {
+            message_id: message.id,
+          },
+        });
+
+        while (chatWithPAW) {
+          let userPromptMessage =
+            req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+          let AIReplyMessage = "";
+
+          const AIReplyFetchedData = await axios({
+            method: "POST",
+            url: `https://api.openai.com/v1/chat/completions`,
+            headers: {
+              Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            },
+            data: {
+              model: "gpt-3.5-turbo",
+              messages: [
+                {
+                  role: "user",
+                  content: "Halo, aku mau ngobrol sama kamu!",
+                },
+              ],
+              temperature: 0.7,
+            },
+          });
+
+          const userPromptFetchedData = await axios({
+            method: "POST",
+            url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+            headers: {
+              Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+            },
+            data: {
+              messaging_product: "whatsapp",
+              recipient_type: "individual",
+              to: message.from ?? "Whatsapp User",
+              type: "interactive",
+              interactive: {
+                type: "button",
+                body: {
+                  text: initialAIMessage,
+                },
+                footer: {
+                  text: "Powered by ChatGPT-3.5",
+                },
+                action: {
+                  buttons: [
+                    {
+                      type: "reply",
+                      reply: {
+                        id: "STOP_NGOBROL_SAMA_GITA",
+                        title: "Berhenti ngobrol",
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+            context: {
+              message_id: message.id,
+            },
+          });
+        }
       }
-    } 
-    
-    else if (message?.type === "interactive" && chatWithPAW === true) {
     }
+
+    // else if (message?.type === "interactive" && chatWithPAW === true) {
+    // }
 
     console.log("Current chatWithPAW is", chatWithPAW);
     res.sendStatus(200);
