@@ -31,6 +31,35 @@ let userList = [
 
 /* Functions */
 
+const chatWithAi = async (message) =>  {
+  try{
+    
+    ""
+    const initialFetchedAIData = await axios({
+      method: "POST",
+      url: `https://api.openai.com/v1/chat/completions`,
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      data: {
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+        temperature: 0.7,
+      },
+    });
+    
+    return initialFetchedAIData;
+  }catch(error){
+    console.log("error dari function chatWithAi: ", error.message);
+  }
+  
+}
+
 const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   try {
     console.log(message, ' ', business_phone_number_id);
@@ -77,7 +106,7 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
         },
       },
       context: {
-        message_id: message.id,
+        message_id: message?.id,
       },
     });
 
@@ -91,7 +120,7 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
       data: {
         messaging_product: "whatsapp",
         status: "read",
-        message_id: message.id,
+        message_id: message?.id,
       },
     });
   } catch (error) {
@@ -268,7 +297,10 @@ app.post("/webhook", async (req, res) => {
       welcome(message,business_phone_number_id,"welcome jink");
     } else {
       if (userData.chatWithPAW) {
-        welcome(message,business_phone_number_id,"kamu lagi chattingan ama paw jink");
+        const AIrespond = chatWithAi(message?.text.body);
+        console.log("respon ai: ", AIrespond);
+        welcome(message,business_phone_number_id,"ini respon:");
+        welcome(message,business_phone_number_id,AIrespond);
       }
 
       if (message?.text.body === "1") {
@@ -276,7 +308,7 @@ app.post("/webhook", async (req, res) => {
         userData.chatWithPAW = true;
         welcome(message,business_phone_number_id,"kamu akan chat dengan PAW, ad yang bisa dibantu?");
       }
-      welcome(message,business_phone_number_id,"apa si");
+      welcome(message,business_phone_number_id,"apa si, klo mw chat ama gw, teken 1");
       
     }
     
