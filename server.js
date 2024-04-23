@@ -23,11 +23,24 @@ const {
 let chatWithPAW = false;
 
 app.post("/webhook", async (req, res) => {
+  
+  let arrayOfMessage = [{
+      message: "",
+      chatWithPAW: null,
+      from: ""
+    }];
+  
   try {
-    console.log("Incoming webhook message:", JSON.stringify(req.body, null, 2));
+    // console.log("Incoming webhook message:", JSON.stringify(req.body, null, 2));
 
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
-
+    
+    
+    
+    console.log("message:", message);
+    
+    return null;
+    
     if (message?.type === "text" && chatWithPAW === false) {
       const business_phone_number_id =
         req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;

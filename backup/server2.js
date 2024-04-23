@@ -176,7 +176,7 @@ app.post("/webhook", async (req, res) => {
         });
 
         console.log(
-          "fetched: ",
+          "Initial AI Reply: ",
           initialFetchedAIData.data.choices[0].message.content
         );
         initialAIMessage = initialFetchedAIData.data.choices[0].message.content;
@@ -218,10 +218,17 @@ app.post("/webhook", async (req, res) => {
           },
         });
 
-        while (chatWithPAW) {
-          let userPromptMessage =
-            req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+        while (chatWithPAW === true) {
+          let userPromptMessage = [];
           let AIReplyMessage = "";
+
+          const userMessages =
+            req.body.entry?.[0]?.changes[0]?.value?.messages || [];
+          userMessages.forEach((msg) => {
+            if (msg.text) {
+              userPromptMessage.push(msg.text);
+            }
+          });
 
           const AIReplyFetchedData = await axios({
             method: "POST",
@@ -231,15 +238,24 @@ app.post("/webhook", async (req, res) => {
             },
             data: {
               model: "gpt-3.5-turbo",
-              messages: [
-                {
-                  role: "user",
-                  content: userPromptMessage,
-                },
-              ],
+              messages: userPromptMessage.map((msg) => ({
+                role: "user",
+                content: msg,
+              })),
               temperature: 0.7,
             },
           });
+
+          console.log(
+            "User Prompt:",
+            req.body.entry?.[0]?.changes[0]?.value?.messages?.[0]
+          );
+          console.log(
+            "AI Reply:",
+            AIReplyFetchedData.data.choices[0].message.content
+          );
+
+          AIReplyMessage = AIReplyFetchedData.data.choices[0].message.content;
 
           const userPromptFetchedData = await axios({
             method: "POST",
@@ -255,7 +271,7 @@ app.post("/webhook", async (req, res) => {
               interactive: {
                 type: "button",
                 body: {
-                  text: initialAIMessage,
+                  text: AIReplyMessage,
                 },
                 footer: {
                   text: "Powered by ChatGPT-3.5",
@@ -283,9 +299,9 @@ app.post("/webhook", async (req, res) => {
 
         await axios({
           method: "POST",
-          url: `https://graph.facebook.com/v${process.env.CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+          url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
           headers: {
-            Authorization: `Bearer ${process.env.GRAPH_API_TOKEN}`,
+            Authorization: `Bearer ${GRAPH_API_TOKEN}`,
           },
           data: {
             messaging_product: "whatsapp",
