@@ -34,28 +34,34 @@ app.post("/webhook", async (req, res) => {
   try {
 
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
-    const user = message.from;
+    const queriedUser = message.from;
     
-    //check user is exist in json or not with "from"
+    let userExists = null;
+
+    for (let i = 0; i < userList.length; i++) {
+      if (userList[i].from === queriedUser) {
+        userExists = true;
+        break; // No need to continue once the user is found
+      }
+    }
     
-    if(!user exist in userList){
+    console.log("queriedUser:", queriedUser);
+
+    console.log("userExists:", userExists);
+    
+    if(!userExists){
+      console.log('user not exist');
       userList.push({
         message: message.text.body,
         chatWithPAW: false, 
         from: message.from, 
       });
+    }else{
+      console.log('user chatted before');
+      console.log(userList); 
     }
     
     
-    
-    
-    
-    //if "from" has same data with any data inside json
-    
-    //if new user, append json
-    
-    //if user has messaged before, default reply, but dont append json
-
 
     res.sendStatus(200);
   } catch (error) {
@@ -64,8 +70,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-
-
+console.log('userlist',userList);
 
 
 
