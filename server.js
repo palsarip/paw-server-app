@@ -31,7 +31,7 @@ let userList = [
 
 /* Functions */
 
-const welcome = async (message, business_phone_number_id) => {
+const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   try {
   
 
@@ -49,7 +49,8 @@ const welcome = async (message, business_phone_number_id) => {
         interactive: {
           type: "button",
           body: {
-            text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
+            // text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
+            text: "halo"
           },
           action: {
             buttons: [
@@ -93,7 +94,7 @@ const welcome = async (message, business_phone_number_id) => {
       },
     });
   } catch (error) {
-    console.log(error.message);
+    console.log("error dari welcome function: ",error.message);
   }
 };
 
@@ -241,6 +242,7 @@ const welcome = async (message, business_phone_number_id) => {
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+    const business_phone_number_id = message.metadata?.phone_number_id;
     const queriedUser = message?.from;
 
     let userExists = null;
@@ -263,27 +265,20 @@ app.post("/webhook", async (req, res) => {
       });
     } else {
       if (userData.chatWithPAW) {
-        console.log("this person is currently chatting with PAW");
-        // function untuk proses chatting dengan bot
-        // function(meesage.text.body);
-      } else {
-        console.log(
-          " welcome welcome bla bla apakah anda ingin chat dengan PAW? jika iya tekan 1"
-        );
-        const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
-
-        const business_phone_number_id =
-          req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
-        welcome(message,business_phone_number_id);
+        welcome(message,business_phone_number_id,"kamu lagi chattingan ama paw jink");
       }
 
       if (message.text.body === "1") {
         userData.chatWithPAW = true;
-        console.log("You're now chatting with PAW.");
+        welcome(message,business_phone_number_id,"kamu akan chat dengan PAW, ad yang bisa dibantu?");
       }
       
     }
+    
+    welcome(message,business_phone_number_id,"welcome jink");
+    
     console.log("\n end of loop \n");
+    
     res.sendStatus(200);
   } catch (error) {
     console.error("Error processing webhook:", error);
