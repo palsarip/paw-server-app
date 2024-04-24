@@ -123,10 +123,7 @@ const openAIPrompt = async (message) => {
   }
 };
 
-const initialChatWithPAW = async (
-  message,
-  business_phone_number_id,
-) => {
+const initialChatWithPAW = async (message, business_phone_number_id) => {
   try {
     await axios({
       method: "POST",
@@ -164,6 +161,60 @@ const initialChatWithPAW = async (
           type: "button",
           body: {
             text: "Halo dengan PAW disini!, ada yang bisa aku bantu?\n\nSilahkan ketik apa yang mau dibicarakan",
+          },
+          action: {
+            buttons: [
+              {
+                type: "reply",
+                reply: { id: "STOP_CHAT_WITH_PAW", title: "Stop Chatting 🤖" },
+              },
+            ],
+          },
+        },
+      },
+      context: {
+        message_id: message?.id,
+      },
+    });
+
+    await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id: message?.id,
+      },
+    });
+  } catch (error) {
+    console.olg("error dari function initialChatWithPAW: ", error.message);
+  }
+};
+
+const chatWithPAW = async (
+  message,
+  business_phone_number_id,
+  yangMauDikirim
+) => {
+  try {
+    await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: message?.from ?? "WhatsApp User",
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: yangMauDikirim,
           },
           action: {
             buttons: [
@@ -250,7 +301,7 @@ app.post("/webhook", async (req, res) => {
           },
         });
         console.log(initialFetchedAIData.data.choices[0].message.content);
-        welcome(
+        chatWithPAW(
           message,
           business_phone_number_id,
           initialFetchedAIData.data.choices[0].message.content
@@ -266,10 +317,7 @@ app.post("/webhook", async (req, res) => {
 
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
-          initialChatWithPAW(
-            message,
-            business_phone_number_id,
-          );
+          initialChatWithPAW(message, business_phone_number_id);
         }
       }
     }
