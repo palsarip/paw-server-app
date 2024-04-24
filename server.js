@@ -367,7 +367,7 @@ app.post("/webhook", async (req, res) => {
       welcome(
         message,
         business_phone_number_id,
-        `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`
+        `Halo, ${message?.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`
       );
     } else {
       if (userData.chatWithPAW) {
@@ -426,9 +426,6 @@ app.post("/webhook", async (req, res) => {
         } 
       }
     }
-
-    console.log("\n end of loop \n");
-
     res.sendStatus(200);
   } catch (error) {
     console.error("Error processing webhook:", error);
