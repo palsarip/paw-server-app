@@ -285,16 +285,20 @@ app.post("/webhook", async (req, res) => {
         const AIrespond = openAIPrompt(message?.text.body);
         const initialFetchedAIData = await axios({
           method: "POST",
-          url: `https://api.openai.com/v1/chat/completions`,
+          url: `https://api.openai.com/v1/assistants/asst_XBTr6ZPk1IK5vOigxCiY6qjs`,
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta": "assistants=v2",
           },
           data: {
             model: "gpt-3.5-turbo",
             messages: [
               {
                 role: "user",
-                content: "i will send this message to client, this is the information you need 'ino blabla', then respond this message" + message?.text.body,
+                content:
+                  "i will send this message to client, this is the information you need 'ino blabla', then respond this message" +
+                  message?.text.body,
               },
             ],
             temperature: 0.7,
