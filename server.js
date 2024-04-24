@@ -287,9 +287,7 @@ app.post("/webhook", async (req, res) => {
           method: "POST",
           url: `https://api.openai.com/v1/chat/completions/`,
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta": "assistants=v2",
           },
           data: {
             model: "gpt-3.5-turbo",
@@ -297,7 +295,6 @@ app.post("/webhook", async (req, res) => {
               {
                 role: "user",
                 content:
-                  "i will send this message to client, this is the information you need 'ino blabla', then respond this message" +
                   message?.text.body,
               },
             ],
