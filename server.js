@@ -31,33 +31,6 @@ let userList = [
 
 /* Functions */
 
-const chatWithAi = async (message) => {
-  try {
-    console.log("ini udah masuk ke ai");
-    const initialFetchedAIData = await axios({
-      method: "POST",
-      url: `https://api.openai.com/v1/chat/completions`,
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      data: {
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "user",
-            content: "say hi back",
-          },
-        ],
-        temperature: 0.7,
-      },
-    });
-    console.log(initialFetchedAIData);
-    return initialFetchedAIData;
-  } catch (error) {
-    console.log("error dari function chatWithAi: ", error.message);
-  }
-};
-
 const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   try {
     await axios({
@@ -123,146 +96,83 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   }
 };
 
-// const chatWithPAW = async () => {
-//   let initialAIMessage = "";
+const chatWithPAW = async (message) => {
+  try {
+    console.log("ini udah masuk ke ai");
+    const initialFetchedAIData = await axios({
+      method: "POST",
+      url: `https://api.openai.com/v1/chat/completions`,
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      data: {
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: "say hi back",
+          },
+        ],
+        temperature: 0.7,
+      },
+    });
+    console.log(initialFetchedAIData);
+    return initialFetchedAIData;
+  } catch (error) {
+    console.log("error dari function chatWithPAW: ", error.message);
+  }
+};
 
-//   const initialFetchedAIData = axios({
-//     method: "POST",
-//     url: `https://api.openai.com/v1/chat/completions`,
-//     headers: {
-//       Authorization: `Bearer ${OPENAI_API_KEY}`,
-//     },
-//     data: {
-//       model: "gpt-3.5-turbo",
-//       messages: [
-//         {
-//           role: "user",
-//           content: "Halo, aku mau ngobrol sama kamu!",
-//         },
-//       ],
-//       temperature: 0.7,
-//     },
-//   });
+const initialChatWithPAW = async (message, business_phone_number_id, yangMauDikirim) => {
+  try {
+    await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: message?.from ?? "WhatsApp User",
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            // text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
+            text: yangMauDikirim,
+          },
+          action: {
+            buttons: [
+              {
+                type: "reply",
+                reply: { id: "STOP_CHAT_WITH_PAW", title: "Stop Chatting 🤖" },
+              },
+            ],
+          },
+        },
+      },
+      context: {
+        message_id: message?.id,
+      },
+    });
 
-//   console.log(
-//     "Initial AI Reply: ",
-//     initialFetchedAIData.data.choices[0].message.content
-//   );
-//   initialAIMessage = initialFetchedAIData.data.choices[0].message.content;
-
-//   await axios({
-//     method: "POST",
-//     url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
-//     headers: {
-//       Authorization: `Bearer ${GRAPH_API_TOKEN}`,
-//     },
-//     data: {
-//       messaging_product: "whatsapp",
-//       recipient_type: "individual",
-//       to: message.from ?? "Whatsapp User",
-//       type: "interactive",
-//       interactive: {
-//         type: "button",
-//         body: {
-//           text: initialAIMessage,
-//         },
-//         footer: {
-//           text: "Powered by ChatGPT-3.5",
-//         },
-//         action: {
-//           buttons: [
-//             {
-//               type: "reply",
-//               reply: {
-//                 id: "STOP_CHAT_WITH_PAW",
-//                 title: "Berhenti ngobrol",
-//               },
-//             },
-//           ],
-//         },
-//       },
-//     },
-//     context: {
-//       message_id: message.id,
-//     },
-//   });
-
-//   while (chatWithPAW === true) {
-//     let userPromptMessage = [];
-//     let AIReplyMessage = "";
-
-//     const userMessages = req.body.entry?.[0]?.changes[0]?.value?.messages || [];
-//     userMessages.forEach((msg) => {
-//       if (msg.text) {
-//         userPromptMessage.push(msg.text);
-//       }
-//     });
-
-//     const AIReplyFetchedData = await axios({
-//       method: "POST",
-//       url: `https://api.openai.com/v1/chat/completions`,
-//       headers: {
-//         Authorization: `Bearer ${OPENAI_API_KEY}`,
-//       },
-//       data: {
-//         model: "gpt-3.5-turbo",
-//         messages: userPromptMessage.map((msg) => ({
-//           role: "user",
-//           content: msg,
-//         })),
-//         temperature: 0.7,
-//       },
-//     });
-
-//     console.log(
-//       "User Prompt:",
-//       req.body.entry?.[0]?.changes[0]?.value?.messages?.[0]
-//     );
-//     console.log(
-//       "AI Reply:",
-//       AIReplyFetchedData.data.choices[0].message.content
-//     );
-
-//     AIReplyMessage = AIReplyFetchedData.data.choices[0].message.content;
-
-//     const userPromptFetchedData = await axios({
-//       method: "POST",
-//       url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
-//       headers: {
-//         Authorization: `Bearer ${GRAPH_API_TOKEN}`,
-//       },
-//       data: {
-//         messaging_product: "whatsapp",
-//         recipient_type: "individual",
-//         to: message.from ?? "Whatsapp User",
-//         type: "interactive",
-//         interactive: {
-//           type: "button",
-//           body: {
-//             text: AIReplyMessage,
-//           },
-//           footer: {
-//             text: "Powered by ChatGPT-3.5",
-//           },
-//           action: {
-//             buttons: [
-//               {
-//                 type: "reply",
-//                 reply: {
-//                   id: "STOP_CHAT_WITH_PAW",
-//                   title: "Berhenti ngobrol",
-//                 },
-//               },
-//             ],
-//           },
-//         },
-//       },
-//       context: {
-//         message_id: message.id,
-//       },
-//     });
-//   }
-// };
+    await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id: message?.id,
+      },
+    });
+  } catch (error) {
+    console.olg("error dari function initialChatWithPAW: ", error.message);
+  }
+};
 
 app.post("/webhook", async (req, res) => {
   try {
@@ -272,10 +182,6 @@ app.post("/webhook", async (req, res) => {
       req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
 
     const queriedUser = message?.from;
-
-    const buttonReplyId =
-      req.body.entry[0].changes[0].value.messages[0].interactive.button_reply
-        .id;
 
     let userExists = null;
     let userData;
@@ -295,11 +201,14 @@ app.post("/webhook", async (req, res) => {
         chatWithPAW: false,
         from: message?.from,
       });
-      welcome(message, business_phone_number_id, "welcome jink");
+      welcome(
+        message,
+        business_phone_number_id,
+        `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`
+      );
     } else {
       if (userData.chatWithPAW) {
-        const AIrespond = chatWithAi(message?.text.body);
-        welcome(message, business_phone_number_id, "ini respon:");
+        const AIrespond = chatWithPAW(message?.text.body);
         const initialFetchedAIData = await axios({
           method: "POST",
           url: `https://api.openai.com/v1/chat/completions`,
@@ -327,13 +236,19 @@ app.post("/webhook", async (req, res) => {
         // welcome(message,business_phone_number_id,AIrespond);
       }
 
-      if (buttonReplyId === "CHAT_WITH_PAW") {
-        userData.chatWithPAW = true;
-        welcome(
-          message,
-          business_phone_number_id,
-          "kamu akan chat dengan PAW, ad yang bisa dibantu?"
-        );
+      if (message?.type === "interactive") {
+        const buttonReplyId =
+          req.body.entry[0].changes[0].value.messages[0].interactive
+            .button_reply.id;
+
+        if (buttonReplyId === "CHAT_WITH_PAW") {
+          userData.chatWithPAW = true;
+          initialChatWithPAW(
+            message,
+            business_phone_number_id,
+            "Kamu akan diarahkan untuk chat dengan PAW 🤖\n\nHalo dengan PAW disini!, ada yang bisa aku bantu?\n\nSilahkan ketik apa yang mau dibicarakan"
+          );
+        }
       }
     }
 
