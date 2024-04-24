@@ -294,7 +294,7 @@ app.post("/webhook", async (req, res) => {
             messages: [
               {
                 role: "user",
-                content: "" + message?.text.body,
+                content: "i will send this message to client, this is the information you need 'ino blabla', then respond this message" + message?.text.body,
               },
             ],
             temperature: 0.7,
