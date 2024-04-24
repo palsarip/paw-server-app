@@ -96,7 +96,7 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   }
 };
 
-const chatWithPAW = async (message) => {
+const openAIPrompt = async (message) => {
   try {
     console.log("ini udah masuk ke ai");
     const initialFetchedAIData = await axios({
@@ -123,8 +123,32 @@ const chatWithPAW = async (message) => {
   }
 };
 
-const initialChatWithPAW = async (message, business_phone_number_id, yangMauDikirim) => {
+const initialChatWithPAW = async (
+  message,
+  business_phone_number_id,
+) => {
   try {
+    await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: message?.from ?? "WhatsApp User",
+        type: "text",
+        text: {
+          preview_url: false,
+          body: "Kamu akan diarahkan untuk chat dengan PAW 🤖",
+        },
+      },
+      context: {
+        message_id: message?.id,
+      },
+    });
+
     await axios({
       method: "POST",
       url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
@@ -139,8 +163,7 @@ const initialChatWithPAW = async (message, business_phone_number_id, yangMauDiki
         interactive: {
           type: "button",
           body: {
-            // text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
-            text: yangMauDikirim,
+            text: "Halo dengan PAW disini!, ada yang bisa aku bantu?\n\nSilahkan ketik apa yang mau dibicarakan",
           },
           action: {
             buttons: [
@@ -208,7 +231,7 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
-        const AIrespond = chatWithPAW(message?.text.body);
+        const AIrespond = openAIPrompt(message?.text.body);
         const initialFetchedAIData = await axios({
           method: "POST",
           url: `https://api.openai.com/v1/chat/completions`,
@@ -246,7 +269,6 @@ app.post("/webhook", async (req, res) => {
           initialChatWithPAW(
             message,
             business_phone_number_id,
-            "Kamu akan diarahkan untuk chat dengan PAW 🤖\n\nHalo dengan PAW disini!, ada yang bisa aku bantu?\n\nSilahkan ketik apa yang mau dibicarakan"
           );
         }
       }
