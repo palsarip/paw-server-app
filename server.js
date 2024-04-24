@@ -254,8 +254,28 @@ const stopChatWithPAW = async (
   yangMauDikirim
 ) => {
   try {
-    
-        await axios({
+    await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: message?.from ?? "WhatsApp User",
+        type: "text",
+        text: {
+          preview_url: false,
+          body: "Semoga jawaban yang PAW berikan dapat membantu yaa! 😊",
+        },
+      },
+      context: {
+        message_id: message?.id,
+      },
+    });
+
+    await axios({
       method: "POST",
       url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
       headers: {
@@ -269,8 +289,7 @@ const stopChatWithPAW = async (
         interactive: {
           type: "button",
           body: {
-            // text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
-            text: yangMauDikirim,
+            text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
           },
           action: {
             buttons: [
@@ -300,7 +319,7 @@ const stopChatWithPAW = async (
         message_id: message?.id,
       },
     });
-    
+
     await axios({
       method: "POST",
       url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
@@ -314,7 +333,7 @@ const stopChatWithPAW = async (
       },
     });
   } catch (error) {
-    console.olg("error dari function initialChatWithPAW: ", error.message);
+    console.olg("error dari function stopChatWithPAW: ", error.message);
   }
 };
 
@@ -364,8 +383,7 @@ app.post("/webhook", async (req, res) => {
             messages: [
               {
                 role: "user",
-                content:
-                  message?.text.body,
+                content: message?.text.body,
               },
             ],
             temperature: 0.7,
@@ -382,15 +400,22 @@ app.post("/webhook", async (req, res) => {
       }
 
       if (message?.type === "interactive") {
+        
         const buttonReplyId =
           req.body.entry[0].changes[0].value.messages[0].interactive
             .button_reply.id;
+        
+        console.log("Button ID:", buttonReplyId)
 
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
           initialChatWithPAW(message, business_phone_number_id);
-        } else if (buttonReplyId === "STOP_CHAT_WITH_PAW") {
+        }
+        
+        if (buttonReplyId === "STOP_CHAT_WITH_PAW") {
           userData.chatWithPAW = false;
+          console.log("STOP_CHAT_WITH_PAW", userData.chatWithPAW)
+          stopChatWithPAW(message, business_phone_number_id);
         }
       }
     }
