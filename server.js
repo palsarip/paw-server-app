@@ -371,6 +371,20 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
+        if (message?.type === "interactive") {
+          const buttonReplyId =
+            req.body.entry[0].changes[0].value.messages[0].interactive
+              .button_reply.id;
+
+          console.log("Button ID:", buttonReplyId);
+
+          if (buttonReplyId === "STOP_CHAT_WITH_PAW") {
+            userData.chatWithPAW = false;
+            console.log("STOP_CHAT_WITH_PAW", userData.chatWithPAW);
+            stopChatWithPAW(message, business_phone_number_id);
+          }
+        }
+
         const AIrespond = openAIPrompt(message?.text.body);
         const initialFetchedAIData = await axios({
           method: "POST",
@@ -400,23 +414,16 @@ app.post("/webhook", async (req, res) => {
       }
 
       if (message?.type === "interactive") {
-        
         const buttonReplyId =
           req.body.entry[0].changes[0].value.messages[0].interactive
             .button_reply.id;
-        
-        console.log("Button ID:", buttonReplyId)
+
+        console.log("Button ID:", buttonReplyId);
 
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
           initialChatWithPAW(message, business_phone_number_id);
-        }
-        
-        if (buttonReplyId === "STOP_CHAT_WITH_PAW") {
-          userData.chatWithPAW = false;
-          console.log("STOP_CHAT_WITH_PAW", userData.chatWithPAW)
-          stopChatWithPAW(message, business_phone_number_id);
-        }
+        } 
       }
     }
 
