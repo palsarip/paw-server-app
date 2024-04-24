@@ -81,7 +81,7 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
 
     await axios({
       method: "POST",
-      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
       headers: {
         Authorization: `Bearer ${GRAPH_API_TOKEN}`,
       },
@@ -179,7 +179,7 @@ const initialChatWithPAW = async (message, business_phone_number_id) => {
 
     await axios({
       method: "POST",
-      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
       headers: {
         Authorization: `Bearer ${GRAPH_API_TOKEN}`,
       },
@@ -233,7 +233,77 @@ const chatWithPAW = async (
 
     await axios({
       method: "POST",
-      url: `https://graph.facebook.com/v18.0/${business_phone_number_id}/messages`,
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id: message?.id,
+      },
+    });
+  } catch (error) {
+    console.olg("error dari function initialChatWithPAW: ", error.message);
+  }
+};
+
+const stopChatWithPAW = async (
+  message,
+  business_phone_number_id,
+  yangMauDikirim
+) => {
+  try {
+    
+        await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
+      headers: {
+        Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+      },
+      data: {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: message?.from ?? "WhatsApp User",
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            // text: `Halo, ${message.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`,
+            text: yangMauDikirim,
+          },
+          action: {
+            buttons: [
+              {
+                type: "reply",
+                reply: { id: "GAMES", title: "Games 🕹️" },
+              },
+              {
+                type: "reply",
+                reply: {
+                  id: "CHAT_WITH_PAW",
+                  title: "Chat with PAW 🤖",
+                },
+              },
+              // {
+              //   type: "reply",
+              //   reply: {
+              //     id: "LIVE_CHAT",
+              //     title: "Live Chat",
+              //   },
+              // },
+            ],
+          },
+        },
+      },
+      context: {
+        message_id: message?.id,
+      },
+    });
+    
+    await axios({
+      method: "POST",
+      url: `https://graph.facebook.com/v${CLOUD_API_VERSION}/${business_phone_number_id}/messages`,
       headers: {
         Authorization: `Bearer ${GRAPH_API_TOKEN}`,
       },
@@ -319,6 +389,8 @@ app.post("/webhook", async (req, res) => {
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
           initialChatWithPAW(message, business_phone_number_id);
+        } else if (buttonReplyId === "STOP_CHAT_WITH_PAW") {
+          userData.chatWithPAW = false;
         }
       }
     }
