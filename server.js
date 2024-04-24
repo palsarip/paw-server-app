@@ -285,7 +285,7 @@ app.post("/webhook", async (req, res) => {
         const AIrespond = openAIPrompt(message?.text.body);
         const initialFetchedAIData = await axios({
           method: "POST",
-          url: `https://api.openai.com/v1/chat/completions/`,
+          url: `https://api.openai.com/v1/chat/completions`,
           headers: {
             Authorization: `Bearer ${OPENAI_API_KEY}`,
           },
