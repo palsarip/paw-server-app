@@ -421,9 +421,10 @@ app.post("/webhook", async (req, res) => {
             Authorization: `Bearer ${OPENAI_API_KEY}`,
             "OpenAI-Beta": "assistants=v2",
           },
-        })
-        
-                const status = checkOpenAIAssistantStatus.status;
+        });
+
+        console.log("checkOpenAIAssistantStatus", checkOpenAIAssistantStatus.data.status)
+        const status = checkOpenAIAssistantStatus.data.status;
 
         if (status === "completed") {
           clearInterval(pollingInterval);
@@ -443,8 +444,9 @@ app.post("/webhook", async (req, res) => {
           listOpenAIAssistantMessages.body.data.forEach((message) => {
             messages.push(message.content);
           });
+          
+          console.log(messages)
 
-          console.log(res.json({ messages }));
         }
       }
 
