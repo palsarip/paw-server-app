@@ -387,27 +387,68 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const createOpenAIThreadAndRun = await axios({
+        const createOpenAIThread = await axios({
           method: "POST",
-          url: `https://api.openai.com/v1/threads/runs`,
+          url: `https://api.openai.com/v1/threads`,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
             "OpenAI-Beta": "assistants=v2",
           },
           data: {
-            assistant_id: "asst_XBTr6ZPk1IK5vOigxCiY6qjs",
-            thread: {
-              messages: [
-                {
-                  role: "user",
-                  content: message?.text.body,
-                },
-              ],
-            },
+            messages: [
+              {
+                role: "user",
+                content: message?.text.body,
+              },
+            ],
           },
         });
-        console.log("createOpenAIThreadAndRun:", createOpenAIThreadAndRun.data);
+        console.log("createOpenAIThread:", createOpenAIThread.data.id);
+
+        openAIThreadId = createOpenAIThread.data.id;
+
+        // chatWithPAW(
+        //   message,
+        //   business_phone_number_id,
+        //   fetchedAIData.data.choices[0].message.content
+        // );
+
+        const retrieveOpenAIThread = await axios({
+          method: "GET",
+          url: `https://api.openai.com/v1/threads/${openAIThreadId}`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta": "assistants=v2",
+          },
+        });
+        console.log("retrieveOpenAIThread:", retrieveOpenAIThread.data);
+
+        const retrieveOpenAIThreadMessages = await axios({
+          method: "GET",
+          url: `https://api.openai.com/v1/threads/${openAIThreadId}/messages`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta": "assistants=v2",
+          },
+        });
+        console.log(
+          "retrieveOpenAIThreadMessages:",
+          retrieveOpenAIThreadMessages.data
+        );
+
+        const contentTextValues = [];
+
+        retrieveOpenAIThreadMessages.data.data.forEach(message => {
+            const textValue = message.content[0].text.value;
+            contentTextValues.push(textValue);
+          
+          console.log("contentTextValues", contentTextValues)
+        });
+
+        return contentTextValues;
       }
 
       if (message?.type === "interactive") {
