@@ -371,7 +371,7 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
-        const openAIThreadId = "";
+        let openAIThreadId = "";
 
         if (message?.type === "interactive") {
           const buttonReplyId =
