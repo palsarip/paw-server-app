@@ -405,13 +405,20 @@ app.post("/webhook", async (req, res) => {
         console.log(createOpenAIThread.data);
         console.log(createOpenAIThread.data.id);
         
+        const openAIThreadId = createOpenAIThread.data.id
+        
         
         // chatWithPAW(
         //   message,
         //   business_phone_number_id,
         //   fetchedAIData.data.choices[0].message.content
         // );
+        
+        return openAIThreadId
       }
+      
+      const openAItbreadId = openAIThreadId
+    
       
       const retrieveOpenAIThread = await axios ({
           method: "GET",
