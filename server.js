@@ -7,6 +7,7 @@
 
 import express from "express";
 import axios from "axios";
+const OpenAI = require('openai');
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,10 @@ const {
   CLOUD_API_VERSION,
   OPENAI_API_KEY,
 } = process.env;
+
+const openai = new OpenAI({
+    apiKey: OPENAI_API_KEY,
+});
 
 /* Variables */
 
@@ -311,6 +316,24 @@ const stopChatWithPAW = async (
   }
 };
 
+async function createThread() {
+    console.log('Creating a new thread...');
+    const thread = await openai.beta.threads.create();
+    return thread;
+}
+
+async function addMessage(threadId, message) {
+    console.log('Adding a new message to thread: ' + threadId);
+    const response = await openai.beta.threads.messages.create(
+        threadId,
+        {
+            role: "user",
+            content: message
+        }
+    );
+    return response;
+}
+
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
@@ -359,7 +382,7 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const createOpenAIThreadAndRun = await axios({
+        const createOpenAIThread = await axios({
           method: "POST",
           url: `https://api.openai.com/v1/threads/runs`,
           headers: {
@@ -367,24 +390,14 @@ app.post("/webhook", async (req, res) => {
             Authorization: `Bearer ${OPENAI_API_KEY}`,
             "OpenAI-Beta": "assistants=v2",
           },
-          data: {
-            assistant_id: "asst_XBTr6ZPk1IK5vOigxCiY6qjs",
-            thread: {
-              messages: [
-                {
-                  role: "user",
-                  content: message?.text.body,
-                },
-              ],
-            },
-          },
         });
-        console.log("createOpenAIThreadAndRun:", createOpenAIThreadAndRun.data.instructions);
-        chatWithPAW(
-          message,
-          business_phone_number_id,
-          createOpenAIThreadAndRun.data.instructions
-        );
+        console.log("createOpenAIThread:", createOpenAIThread.data)
+        
+        const createOpenAIThreadMessage = await axios ({
+          method: "POST",
+          url: `https://api.openai.com/v1/threads/{thread_id}/messages`,
+          
+        });
       }
 
       if (message?.type === "interactive") {
