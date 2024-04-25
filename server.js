@@ -17,7 +17,6 @@ const {
   PORT,
   CLOUD_API_VERSION,
   OPENAI_API_KEY,
-  OPENAI_ASSISTANT_ID,
 } = process.env;
 
 /* Variables */
@@ -94,6 +93,33 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
     });
   } catch (error) {
     console.log("error dari welcome function: ", error.message);
+  }
+};
+
+const openAIPrompt = async (message) => {
+  try {
+    console.log("ini udah masuk ke ai");
+    const initialFetchedAIData = await axios({
+      method: "POST",
+      url: `https://api.openai.com/v1/chat/completions`,
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      data: {
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: "say hi back",
+          },
+        ],
+        temperature: 0.7,
+      },
+    });
+    console.log(initialFetchedAIData);
+    return initialFetchedAIData;
+  } catch (error) {
+    console.log("error dari function chatWithPAW: ", error.message);
   }
 };
 
@@ -188,7 +214,7 @@ const chatWithPAW = async (
         interactive: {
           type: "button",
           body: {
-            text: `${yangMauDikirim}`,
+            text: yangMauDikirim,
           },
           action: {
             buttons: [
@@ -218,7 +244,7 @@ const chatWithPAW = async (
       },
     });
   } catch (error) {
-    console.log("error dari function chatWithPAW: ", error.message);
+    console.olg("error dari function initialChatWithPAW: ", error.message);
   }
 };
 
@@ -345,10 +371,6 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
-        let openAIThreadId;
-        let openAIRunId;
-        let pollingInterval;
-
         if (message?.type === "interactive") {
           const buttonReplyId =
             req.body.entry[0].changes[0].value.messages[0].interactive
@@ -363,73 +385,32 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const createOpenAIThread = await axios({
+        const AIrespond = openAIPrompt(message?.text.body);
+        const initialFetchedAIData = await axios({
           method: "POST",
-          url: `https://api.openai.com/v1/threads`,
+          url: `https://api.openai.com/v1/chat/completions`,
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta": "assistants=v2",
           },
           data: {
+            model: "gpt-3.5-turbo",
             messages: [
               {
                 role: "user",
                 content: message?.text.body,
               },
             ],
+            temperature: 0.7,
           },
         });
-        console.log("createOpenAIThread:", createOpenAIThread.data.id);
-        openAIThreadId = createOpenAIThread.data.id;
-
-        const createOpenAIThreadMessage = await axios({
-          method: "POST",
-          url: `https://api.openai.com/v1/threads/${openAIThreadId}/messages`,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta": "assistants=v2",
-          },
-          data: {
-            role: "user",
-            content: message?.text.body,
-          },
-        });
-
-        const runOpenAIAssistant = await axios({
-          method: "POST",
-          url: `https://api.openai.com/v1/threads/${openAIThreadId}/runs`,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta": "assistants=v2",
-          },
-          data: {
-            assistant_id: OPENAI_ASSISTANT_ID,
-          },
-        });
-
-        console.log("createOpenAIThread:", runOpenAIAssistant.data.id);
-        openAIRunId = runOpenAIAssistant.data.id;
-
-        const checkOpenAIAssistantStatus = await axios({
-          method: "GET",
-          url: `https://api.openai.com/v1/threads/${openAIThreadId}/runs/${openAIRunId}`,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta": "assistants=v2",
-          },
-        });
-
-        console.log(
-          "checkOpenAIAssistantStatus",
-          checkOpenAIAssistantStatus.data
+        console.log(initialFetchedAIData.data.choices[0].message.content);
+        chatWithPAW(
+          message,
+          business_phone_number_id,
+          initialFetchedAIData.data.choices[0].message.content
         );
-        const status = checkOpenAIAssistantStatus.data.status;
 
-        
+        // welcome(message,business_phone_number_id,AIrespond);
       }
 
       if (message?.type === "interactive") {
@@ -442,7 +423,7 @@ app.post("/webhook", async (req, res) => {
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
           initialChatWithPAW(message, business_phone_number_id);
-        }
+        } 
       }
     }
     res.sendStatus(200);
