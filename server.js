@@ -96,32 +96,6 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
   }
 };
 
-const openAIPrompt = async (message) => {
-  try {
-    console.log("ini udah masuk ke ai");
-    const initialFetchedAIData = await axios({
-      method: "POST",
-      url: `https://api.openai.com/v1/chat/completions`,
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      data: {
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "user",
-            content: "say hi back",
-          },
-        ],
-        temperature: 0.7,
-      },
-    });
-    console.log(initialFetchedAIData);
-    return initialFetchedAIData;
-  } catch (error) {
-    console.log("error dari function chatWithPAW: ", error.message);
-  }
-};
 
 const initialChatWithPAW = async (message, business_phone_number_id) => {
   try {
@@ -371,8 +345,6 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
-        let openAIThreadId = "";
-
         if (message?.type === "interactive") {
           const buttonReplyId =
             req.body.entry[0].changes[0].value.messages[0].interactive
