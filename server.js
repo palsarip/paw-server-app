@@ -404,8 +404,7 @@ app.post("/webhook", async (req, res) => {
             ],
           },
         });
-        console.log(createOpenAIThread.data);
-        console.log(createOpenAIThread.data.id);
+        console.log("createOpenAIThread:", createOpenAIThread.data.id);
 
         openAIThreadId = createOpenAIThread.data.id;
 
@@ -424,7 +423,26 @@ app.post("/webhook", async (req, res) => {
             "OpenAI-Beta": "assistants=v2",
           },
         });
-        console.log(retrieveOpenAIThread.data);
+        console.log("retrieveOpenAIThread:", retrieveOpenAIThread.data);
+
+        const retrieveOpenAIThreadMessages = await axios({
+          method: "GET",
+          url: `https://api.openai.com/v1/threads/${openAIThreadId}/messages`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta": "assistants=v2",
+          },
+        });
+        console.log(
+          "retrieveOpenAIThreadMessages:",
+          retrieveOpenAIThreadMessages.data
+        );
+        
+                console.log(
+          "retrieveOpenAIThreadMessages.data.content:",
+          retrieveOpenAIThreadMessages.data[0].content[0].text.value
+        );
       }
 
       if (message?.type === "interactive") {
