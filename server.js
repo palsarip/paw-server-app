@@ -214,7 +214,7 @@ const chatWithPAW = async (
         interactive: {
           type: "button",
           body: {
-            text: yangMauDikirim,
+            text: `${yangMauDikirim}`,
           },
           action: {
             buttons: [
@@ -244,7 +244,7 @@ const chatWithPAW = async (
       },
     });
   } catch (error) {
-    console.olg("error dari function initialChatWithPAW: ", error.message);
+    console.log("error dari function chatWithPAW: ", error.message);
   }
 };
 
@@ -407,7 +407,12 @@ app.post("/webhook", async (req, res) => {
             },
           },
         });
-        console.log("createOpenAIThreadAndRun:", createOpenAIThreadAndRun.data);
+        console.log("createOpenAIThreadAndRun:", createOpenAIThreadAndRun.data.instructions);
+        chatWithPAW(
+          message,
+          business_phone_number_id,
+          createOpenAIThreadAndRun.data.instructions
+        );
       }
 
       if (message?.type === "interactive") {
