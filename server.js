@@ -385,7 +385,7 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const fetchedAIData = await axios({
+        const createOpenAIThread = await axios({
           method: "POST",
           url: `https://api.openai.com/v1/threads`,
           headers: {
@@ -402,13 +402,35 @@ app.post("/webhook", async (req, res) => {
             ],
           },
         });
-        console.log(fetchedAIData.data.choices[0].message.content);
+        console.log(createOpenAIThread.data);
+        console.log(createOpenAIThread.data.id);
+        
+        
         // chatWithPAW(
         //   message,
         //   business_phone_number_id,
         //   fetchedAIData.data.choices[0].message.content
         // );
       }
+      
+      const retrieveOpenAIThread = await axios ({
+          method: "GET",
+          url: `https://api.openai.com/v1/threads/${openAIThreadId}`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta":"assistants=v2",
+          },
+          data: {
+            messages: [
+              {
+                role: "user",
+                content: message?.text.body,
+              },
+            ],
+          },
+        });
+      console.log(retrieveOpenAIThread.data);
 
       if (message?.type === "interactive") {
         const buttonReplyId =
