@@ -423,14 +423,6 @@ app.post("/webhook", async (req, res) => {
             Authorization: `Bearer ${OPENAI_API_KEY}`,
             "OpenAI-Beta": "assistants=v2",
           },
-          data: {
-            messages: [
-              {
-                role: "user",
-                content: message?.text.body,
-              },
-            ],
-          },
         });
         console.log(retrieveOpenAIThread.data);
       }
