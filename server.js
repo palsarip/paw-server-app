@@ -7,7 +7,6 @@
 
 import express from "express";
 import axios from "axios";
-const OpenAI = require('openai');
 
 const app = express();
 app.use(express.json());
@@ -19,10 +18,6 @@ const {
   CLOUD_API_VERSION,
   OPENAI_API_KEY,
 } = process.env;
-
-const openai = new OpenAI({
-    apiKey: OPENAI_API_KEY,
-});
 
 /* Variables */
 
@@ -316,24 +311,6 @@ const stopChatWithPAW = async (
   }
 };
 
-async function createThread() {
-    console.log('Creating a new thread...');
-    const thread = await openai.beta.threads.create();
-    return thread;
-}
-
-async function addMessage(threadId, message) {
-    console.log('Adding a new message to thread: ' + threadId);
-    const response = await openai.beta.threads.messages.create(
-        threadId,
-        {
-            role: "user",
-            content: message
-        }
-    );
-    return response;
-}
-
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
@@ -391,11 +368,10 @@ app.post("/webhook", async (req, res) => {
             "OpenAI-Beta": "assistants=v2",
           },
         });
-        console.log("createOpenAIThread:", createOpenAIThread.data)
         
         const createOpenAIThreadMessage = await axios ({
           method: "POST",
-          url: `https://api.openai.com/v1/threads/{thread_id}/messages`,
+          url: `https://api.openai.com/v1/threads//messages`,
           
         });
       }
