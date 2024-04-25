@@ -345,8 +345,9 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
-        let openAIThreadId = "";
-        let openAIRunId = "";
+        let openAIThreadId;
+        let openAIRunId;
+        let pollingInterval;
 
         if (message?.type === "interactive") {
           const buttonReplyId =
@@ -408,22 +409,43 @@ app.post("/webhook", async (req, res) => {
             assistant_id: OPENAI_ASSISTANT_ID,
           },
         });
-        
+
         console.log("createOpenAIThread:", runOpenAIAssistant.data.id);
         openAIRunId = runOpenAIAssistant.data.id;
 
         const checkOpenAIAssistantStatus = await axios({
-          method: "POST",
+          method: "GET",
           url: `https://api.openai.com/v1/threads/${openAIThreadId}/runs/${openAIRunId}`,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
             "OpenAI-Beta": "assistants=v2",
           },
-        });
+        })
         
-        
-      
+                const status = checkOpenAIAssistantStatus.status;
+
+        if (status === "completed") {
+          clearInterval(pollingInterval);
+
+          const listOpenAIAssistantMessages = axios({
+            method: "GET",
+            url: `https://api.openai.com/v1/threads/${openAIThreadId}/messages`,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+              "OpenAI-Beta": "assistants=v2",
+            },
+          });
+
+          let messages = [];
+
+          listOpenAIAssistantMessages.body.data.forEach((message) => {
+            messages.push(message.content);
+          });
+
+          console.log(res.json({ messages }));
+        }
       }
 
       if (message?.type === "interactive") {
