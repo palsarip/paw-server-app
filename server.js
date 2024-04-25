@@ -438,11 +438,20 @@ app.post("/webhook", async (req, res) => {
           "retrieveOpenAIThreadMessages:",
           retrieveOpenAIThreadMessages.data
         );
-        
-                console.log(
-          "retrieveOpenAIThreadMessages.data.content:",
-          retrieveOpenAIThreadMessages.data[0].content[0].text.value
-        );
+
+        const contentTextValues = [];
+
+        // Iterate through the messages
+        retrieveOpenAIThreadMessages.data.data.forEach(message => {
+            // Extract content text value from each message and push it to the array
+            const textValue = message.content[0].text.value;
+            contentTextValues.push(textValue);
+        });
+
+        // Log the array of content text values
+        console.log("Content Text Values:", contentTextValues);
+
+        return contentTextValues;
       }
 
       if (message?.type === "interactive") {
