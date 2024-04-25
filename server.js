@@ -17,6 +17,7 @@ const {
   PORT,
   CLOUD_API_VERSION,
   OPENAI_API_KEY,
+  OPENAI_ASSISTANT_ID,
 } = process.env;
 
 /* Variables */
@@ -95,7 +96,6 @@ const welcome = async (message, business_phone_number_id, yangMauDikirim) => {
     console.log("error dari welcome function: ", error.message);
   }
 };
-
 
 const initialChatWithPAW = async (message, business_phone_number_id) => {
   try {
@@ -345,6 +345,9 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
+        let openAIThreadId = "";
+        let openAIRunId = "";
+
         if (message?.type === "interactive") {
           const buttonReplyId =
             req.body.entry[0].changes[0].value.messages[0].interactive
@@ -361,7 +364,57 @@ app.post("/webhook", async (req, res) => {
 
         const createOpenAIThread = await axios({
           method: "POST",
-          url: `https://api.openai.com/v1/threads/runs`,
+          url: `https://api.openai.com/v1/threads`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta": "assistants=v2",
+          },
+          data: {
+            messages: [
+              {
+                role: "user",
+                content: message?.text.body,
+              },
+            ],
+          },
+        });
+        console.log("createOpenAIThread:", createOpenAIThread.data.id);
+        openAIThreadId = createOpenAIThread.data.id;
+
+        const createOpenAIThreadMessage = await axios({
+          method: "POST",
+          url: `https://api.openai.com/v1/threads/${openAIThreadId}/messages`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta": "assistants=v2",
+          },
+          data: {
+            role: "user",
+            content: message?.text.body,
+          },
+        });
+
+        const runOpenAIAssistant = await axios({
+          method: "POST",
+          url: `https://api.openai.com/v1/threads/${openAIThreadId}/runs`,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "OpenAI-Beta": "assistants=v2",
+          },
+          data: {
+            assistant_id: OPENAI_ASSISTANT_ID,
+          },
+        });
+        
+        console.log("createOpenAIThread:", runOpenAIAssistant.data.id);
+        openAIRunId = runOpenAIAssistant.data.id;
+
+        const checkOpenAIAssistantStatus = await axios({
+          method: "POST",
+          url: `https://api.openai.com/v1/threads/${openAIThreadId}/runs/${openAIRunId}`,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
@@ -369,11 +422,8 @@ app.post("/webhook", async (req, res) => {
           },
         });
         
-        const createOpenAIThreadMessage = await axios ({
-          method: "POST",
-          url: `https://api.openai.com/v1/threads//messages`,
-          
-        });
+        
+      
       }
 
       if (message?.type === "interactive") {
