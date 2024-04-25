@@ -385,29 +385,32 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const fetchedAIData = await axios({
+        const AIrespond = openAIPrompt(message?.text.body);
+        const initialFetchedAIData = await axios({
           method: "POST",
-          url: `https://api.openai.com/v1/threads`,
+          url: `https://api.openai.com/v1/chat/completions`,
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta":"assistants=v2",
           },
           data: {
+            model: "gpt-3.5-turbo",
             messages: [
               {
                 role: "user",
                 content: message?.text.body,
               },
             ],
+            temperature: 0.7,
           },
         });
-        console.log(fetchedAIData.data.choices[0].message.content);
-        // chatWithPAW(
-        //   message,
-        //   business_phone_number_id,
-        //   fetchedAIData.data.choices[0].message.content
-        // );
+        console.log(initialFetchedAIData.data.choices[0].message.content);
+        chatWithPAW(
+          message,
+          business_phone_number_id,
+          initialFetchedAIData.data.choices[0].message.content
+        );
+
+        // welcome(message,business_phone_number_id,AIrespond);
       }
 
       if (message?.type === "interactive") {
