@@ -371,6 +371,8 @@ app.post("/webhook", async (req, res) => {
       );
     } else {
       if (userData.chatWithPAW) {
+        const openAIThreadId = "";
+
         if (message?.type === "interactive") {
           const buttonReplyId =
             req.body.entry[0].changes[0].value.messages[0].interactive
@@ -391,7 +393,7 @@ app.post("/webhook", async (req, res) => {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta":"assistants=v2",
+            "OpenAI-Beta": "assistants=v2",
           },
           data: {
             messages: [
@@ -404,29 +406,22 @@ app.post("/webhook", async (req, res) => {
         });
         console.log(createOpenAIThread.data);
         console.log(createOpenAIThread.data.id);
-        
-        const openAIThreadId = createOpenAIThread.data.id
-        
-        
+
+        openAIThreadId = createOpenAIThread.data.id;
+
         // chatWithPAW(
         //   message,
         //   business_phone_number_id,
         //   fetchedAIData.data.choices[0].message.content
         // );
-        
-        return openAIThreadId
-      }
-      
-      const openAItbreadId = openAIThreadId
-    
-      
-      const retrieveOpenAIThread = await axios ({
+
+        const retrieveOpenAIThread = await axios({
           method: "GET",
           url: `https://api.openai.com/v1/threads/${openAIThreadId}`,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "OpenAI-Beta":"assistants=v2",
+            "OpenAI-Beta": "assistants=v2",
           },
           data: {
             messages: [
@@ -437,7 +432,8 @@ app.post("/webhook", async (req, res) => {
             ],
           },
         });
-      console.log(retrieveOpenAIThread.data);
+        console.log(retrieveOpenAIThread.data);
+      }
 
       if (message?.type === "interactive") {
         const buttonReplyId =
@@ -449,7 +445,7 @@ app.post("/webhook", async (req, res) => {
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
           initialChatWithPAW(message, business_phone_number_id);
-        } 
+        }
       }
     }
     res.sendStatus(200);
