@@ -423,31 +423,13 @@ app.post("/webhook", async (req, res) => {
           },
         });
 
-        console.log("checkOpenAIAssistantStatus", checkOpenAIAssistantStatus.data.status)
+        console.log(
+          "checkOpenAIAssistantStatus",
+          checkOpenAIAssistantStatus.data
+        );
         const status = checkOpenAIAssistantStatus.data.status;
 
-        if (status === "completed") {
-          clearInterval(pollingInterval);
-
-          const listOpenAIAssistantMessages = axios({
-            method: "GET",
-            url: `https://api.openai.com/v1/threads/${openAIThreadId}/messages`,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
-              "OpenAI-Beta": "assistants=v2",
-            },
-          });
-
-          let messages = [];
-
-          listOpenAIAssistantMessages.body.data.forEach((message) => {
-            messages.push(message.content);
-          });
-          
-          console.log(messages)
-
-        }
+        
       }
 
       if (message?.type === "interactive") {
