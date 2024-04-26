@@ -379,9 +379,7 @@ https://api.openai.com/v1/threads/${threadId}/messages`,
         content: message,
       },
     });
-    console.log("addMessage: ", response);
-
-    return response;
+    return response.data.content[0].text.value;
   } catch (error) {
     throw error;
   }
@@ -404,10 +402,9 @@ https://api.openai.com/v1/threads/${threadId}/runs`,
         assistant_id: OPENAI_ASSISTANT_ID,
       },
     });
+    // console.log("runAssistant ID in function: ", response.data.id);
 
-    console.log("runAssistant ID: ", response);
-
-    return response;
+    return response.data.id;
   } catch (error) {
     throw error;
   }
@@ -520,7 +517,10 @@ app.post("/webhook", async (req, res) => {
 //         });
         
         const addMessageValue = await addMessage(userData.threadId, userPrompt)
-        console.log(addMessageValue);
+        console.log("addMessage: ", addMessageValue);
+        
+        const runAssistantId = await runAssistant(userData.threadId);
+        console.log("runAssistant ID: ", runAssistantId);
       }
 
       if (message?.type === "interactive") {
