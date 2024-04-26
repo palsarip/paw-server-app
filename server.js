@@ -26,6 +26,7 @@ let userList = [
   {
     message: "",
     chatWithPAW: false,
+    threadId: "",
     from: "",
   },
 ];
@@ -343,18 +344,21 @@ const stopChatWithPAW = async (
 async function createThread() {
   console.log("Creating a new thread...");
 
-  const thread = await axios({
-    method: "POST",
-    url: `
-https://api.openai.com/v1/threads`,
-    headers: {
-      "Content-Type": "application/jspon",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "OpenAI-Beta": "assistants=v2",
-    },
-  });
+  try {
+    const response = await axios({
+      method: "POST",
+      url: "https://api.openai.com/v1/threads",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "OpenAI-Beta": "assistants=v2",
+      },
+    });
 
-  return thread;
+    return response.data.id;
+  } catch (error) {
+    throw error; 
+  }
 }
 
 async function addMessage(threadId, message) {
@@ -488,13 +492,12 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const { message, threadId } = req.body;
-        addMessage(threadId, message).then((message) => {
-          runAssistant(threadId).then((run) => {
+        addMessage(userData.threadId, message).then((message) => {
+          runAssistant(userData.threadId).then((run) => {
             const runId = run.id;
 
             pollingInterval = setInterval(() => {
-              checkingStatus(res, threadId, runId);
+              checkingStatus(res, userData.threadId, runId);
             }, 5000);
           });
         });
@@ -509,10 +512,9 @@ app.post("/webhook", async (req, res) => {
 
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
-          createThread().then((thread) => {
-            res.json({ threadId: thread.id });
-          });
+          userData.threadId = await createThread();
           initialChatWithPAW(message, business_phone_number_id);
+          console.log(userData);
         }
       }
     }
