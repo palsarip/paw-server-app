@@ -412,50 +412,55 @@ https://api.openai.com/v1/threads/${threadId}/runs`,
 
 async function checkingStatus(res, threadId, runId) {
   try {
-    
-    console.log("Masuk checkingStatus()")
-    
+    console.log("Masuk checkingStatus()");
+
     const runObject = await axios({
       method: "GET",
       url: `
 https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         "OpenAI-Beta": "assistants=v2",
       },
-      data: {
-        assistant_id: OPENAI_ASSISTANT_ID,
-      },
     });
-    
-    console.log("runObject.data: ", runObject.data)
 
-//     const status = runObject.status;
-//     console.log(runObject);
-//     console.log("Current status: " + status);
+    const status = runObject.data.status;
+    console.log("Current status: " + status);
 
-//     if (status == "completed") {
-//       clearInterval(pollingInterval);
+    if (status == "completed") {
+      console.log("Masuk status completed");
 
-//       const messagesList = await axios({
-//         method: "GET",
-//         url: `https://api.openai.com/v1/threads/${threadId}/messages`,
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${OPENAI_API_KEY}`,
-//           "OpenAI-Beta": "assistants=v2",
-//         },
-//       });
+      clearInterval(pollingInterval);
 
-//       let messages = [];
+      const messagesList = await axios({
+        method: "GET",
+        url: `https://api.openai.com/v1/threads/${threadId}/messages`,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "OpenAI-Beta": "assistants=v2",
+        },
+      });
 
-//       messagesList.body.data.foreach((message) => {
-//         messages.push(message.content);
-//       });
+      if (
+        messagesList.data &&
+        messagesList.data.length > 0 &&
+        messagesList.data[0].content &&
+        messagesList.data[0].content.length > 0
+      ) {
+        console.log(messagesList.data[0].content[0].text.value);
+      } else {
+        console.log("No message content found.");
+      }
 
-//       res.json({ messages });
-//     }
+      //       let messages = [];
+
+      //       messagesList.body.data.foreach((message) => {
+      //         messages.push(message.content);
+      //       });
+
+      // res.json({ messages });
+    }
   } catch (error) {
     throw error;
   }
@@ -511,28 +516,28 @@ app.post("/webhook", async (req, res) => {
 
         const userPrompt = message?.text.body;
 
-//         addMessage(userData.threadId, userPrompt).then((userPrompt) => {
-//           runAssistant(userData.threadId).then((run) => {
-//             const runId = run.id;
+        //         addMessage(userData.threadId, userPrompt).then((userPrompt) => {
+        //           runAssistant(userData.threadId).then((run) => {
+        //             const runId = run.id;
 
-//             pollingInterval = setInterval(() => {
-//               checkingStatus(res, userData.threadId, runId);
-//             }, 5000);
-//           });
-//         });
-        
-        const addMessageValue = await addMessage(userData.threadId, userPrompt)
+        //             pollingInterval = setInterval(() => {
+        //               checkingStatus(res, userData.threadId, runId);
+        //             }, 5000);
+        //           });
+        //         });
+
+        const addMessageValue = await addMessage(userData.threadId, userPrompt);
         console.log("addMessage: ", addMessageValue);
-        
+
         const runAssistantId = await runAssistant(userData.threadId);
         console.log("runAssistant ID: ", runAssistantId);
-        
-        // pollingInterval = setInterval(() => {
-        //   checkingStatus(res, userData.threadId, runAssistantId)
-        // }, 5000)
-        
-        const checkingStatusValue = await checkingStatus(res, userData.threadId, runAssistantId)
-         console.log("checkingStatusValue: ", checkingStatusValue);
+
+        pollingInterval = setInterval(() => {
+          checkingStatus(res, userData.threadId, runAssistantId);
+        }, 5000);
+
+        // const checkingStatusValue = await checkingStatus(res, userData.threadId, runAssistantId)
+        //  console.log("checkingStatusValue: ", checkingStatusValue);
       }
 
       if (message?.type === "interactive") {
