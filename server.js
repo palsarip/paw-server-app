@@ -412,6 +412,9 @@ https://api.openai.com/v1/threads/${threadId}/runs`,
 
 async function checkingStatus(res, threadId, runId) {
   try {
+    
+    console.log("Masuk checkingStatus()")
+    
     const runObject = await axios({
       method: "GET",
       url: `
@@ -425,32 +428,34 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
         assistant_id: OPENAI_ASSISTANT_ID,
       },
     });
+    
+    console.log("runObject.data: ", runObject.data)
 
-    const status = runObject.status;
-    console.log(runObject);
-    console.log("Current status: " + status);
+//     const status = runObject.status;
+//     console.log(runObject);
+//     console.log("Current status: " + status);
 
-    if (status == "completed") {
-      clearInterval(pollingInterval);
+//     if (status == "completed") {
+//       clearInterval(pollingInterval);
 
-      const messagesList = await axios({
-        method: "GET",
-        url: `https://api.openai.com/v1/threads/${threadId}/messages`,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "OpenAI-Beta": "assistants=v2",
-        },
-      });
+//       const messagesList = await axios({
+//         method: "GET",
+//         url: `https://api.openai.com/v1/threads/${threadId}/messages`,
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${OPENAI_API_KEY}`,
+//           "OpenAI-Beta": "assistants=v2",
+//         },
+//       });
 
-      let messages = [];
+//       let messages = [];
 
-      messagesList.body.data.foreach((message) => {
-        messages.push(message.content);
-      });
+//       messagesList.body.data.foreach((message) => {
+//         messages.push(message.content);
+//       });
 
-      res.json({ messages });
-    }
+//       res.json({ messages });
+//     }
   } catch (error) {
     throw error;
   }
@@ -521,6 +526,13 @@ app.post("/webhook", async (req, res) => {
         
         const runAssistantId = await runAssistant(userData.threadId);
         console.log("runAssistant ID: ", runAssistantId);
+        
+        // pollingInterval = setInterval(() => {
+        //   checkingStatus(res, userData.threadId, runAssistantId)
+        // }, 5000)
+        
+        const checkingStatusValue = await checkingStatus(res, userData.threadId, runAssistantId)
+         console.log("checkingStatusValue: ", checkingStatusValue);
       }
 
       if (message?.type === "interactive") {
