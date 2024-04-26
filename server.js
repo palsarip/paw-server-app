@@ -454,7 +454,7 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
       //   console.log("No message content found.");
       // }
       
-      console.log("")
+      console.log("messagesList: ", messagesList.data.data[0].content[0].text.value)
 
             let messages = [];
 
@@ -464,7 +464,7 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
       
       console.log("messages: ", messages)
 
-      res.json({ messages });
+     // res.json({ messages });
     }
   } catch (error) {
     throw error;
