@@ -17,6 +17,7 @@ const {
   PORT,
   CLOUD_API_VERSION,
   OPENAI_API_KEY,
+  OPENAI_ASSISTANT_ID
 } = process.env;
 
 /* Variables */
@@ -337,6 +338,62 @@ const stopChatWithPAW = async (
   }
 };
 
+async function createThread() {
+  console.log("Creating a new thread...");
+
+  const thread = await axios({
+    method: "POST",
+    url: `
+https://api.openai.com/v1/threads`,
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+  });
+  
+  return thread;
+}
+
+async function addMessage(threadId, message) {
+  console.log("Adding a new message to thread: " + threadId);
+  const response = await axios({
+    method: "POST",
+    url: `
+https://api.openai.com/v1/threads/${threadId}/messages`,
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    data: {
+      role: "user",
+      content: message,
+    },
+  });
+  
+return response;
+}
+
+async function runAssistant(threadId) {
+  console.log("Running assistant for thread: " + threadId)
+    const response = await axios({
+    method: "POST",
+    url: `
+https://api.openai.com/v1/threads/${threadId}/runs`,
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    data: {
+      assistant_id: OPENAI_ASSISTANT_ID,
+    },
+  });
+  
+  console.log(response)
+  
+  return response;
+}
+
+async function checkingStatus(res, threadId, runId) {
+  const runObject = await axios
+}
+
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
@@ -423,7 +480,7 @@ app.post("/webhook", async (req, res) => {
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
           initialChatWithPAW(message, business_phone_number_id);
-        } 
+        }
       }
     }
     res.sendStatus(200);
