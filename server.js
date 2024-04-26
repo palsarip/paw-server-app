@@ -453,12 +453,14 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
       // } else {
       //   console.log("No message content found.");
       // }
+      
+      console.log("")
 
             let messages = [];
 
-            messagesList.data.foreach((message) => {
-              messages.push(message.content);
-            });
+           // messagesList.data.foreach((message) => {
+           //   messages.push(message.content);
+           // }); 
       
       console.log("messages: ", messages)
 
