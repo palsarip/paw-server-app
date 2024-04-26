@@ -194,7 +194,7 @@ const initialChatWithPAW = async (message, business_phone_number_id) => {
       },
     });
   } catch (error) {
-    console.olg("error dari function initialChatWithPAW: ", error.message);
+    console.log("error dari function initialChatWithPAW: ", error.message);
   }
 };
 
@@ -248,7 +248,7 @@ const chatWithPAW = async (
       },
     });
   } catch (error) {
-    console.olg("error dari function initialChatWithPAW: ", error.message);
+    console.log("error dari function initialChatWithPAW: ", error.message);
   }
 };
 
@@ -337,7 +337,7 @@ const stopChatWithPAW = async (
       },
     });
   } catch (error) {
-    console.olg("error dari function stopChatWithPAW: ", error.message);
+    console.log("error dari function stopChatWithPAW: ", error.message);
   }
 };
 
@@ -410,7 +410,13 @@ https://api.openai.com/v1/threads/${threadId}/runs`,
   }
 }
 
-async function checkingStatus(res, threadId, runId) {
+async function checkingStatus(
+  res,
+  threadId,
+  runId,
+  message,
+  business_phone_number_id
+) {
   try {
     console.log("Masuk checkingStatus()");
 
@@ -454,15 +460,24 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
       //   console.log("No message content found.");
       // }
 
-      // console.log("messagesList: ", messagesList.data.data[0].content[0].text.value)
+      //       let messages = [];
 
-//       let messages = [];
+      //       messagesList.data.data.forEach((message) => {
+      //         messages.push(message.content);
+      //       });
 
-//       messagesList.data.data.forEach((message) => {
-//         messages.push(message.content);
-//       });
+      //       console.log("messages: ", messages);
 
-//       console.log("messages: ", messages);
+      console.log(
+        "messagesList: ",
+        messagesList.data.data[0].content[0].text.value
+      );
+
+      chatWithPAW(
+        message,
+        business_phone_number_id,
+        messagesList.data.data[0].content[0].text.value
+      );
 
       return messagesList.data.data[0].content[0].text.value;
     }
@@ -541,11 +556,10 @@ app.post("/webhook", async (req, res) => {
           const checkingStatusValue = checkingStatus(
             res,
             userData.threadId,
-            runAssistantId
+            runAssistantId,
+            message,
+            business_phone_number_id
           );
-          
-        console.log("checkingStatusValue: ", checkingStatusValue);
-          
         }, 5000);
       }
 
