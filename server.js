@@ -218,13 +218,10 @@ const chatWithPAW = async (
         interactive: {
           type: "button",
           body: {
-            text: `
-            
-            1. **first**
-            
-            1. **first**
-            
-            1. **first**`,
+            text: 
+            `
+            ${yangMauDikirim}
+            `,
           },
           action: {
             buttons: [
