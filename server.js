@@ -442,24 +442,27 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
         },
       });
 
-      if (
-        messagesList.data &&
-        messagesList.data.length > 0 &&
-        messagesList.data[0].content &&
-        messagesList.data[0].content.length > 0
-      ) {
-        console.log(messagesList.data[0].content[0].text.value);
-      } else {
-        console.log("No message content found.");
-      }
+      // if (
+      //   messagesList.data
+      //   // messagesList.data.length > 0 &&
+      //   // messagesList.data[0].content &&
+      //   // messagesList.data[0].content.length > 0
+      // ) {
+      //   console.log(messagesList.data[0].role);
+      //   // console.log(messagesList.data[0].content[0].text.value);
+      // } else {
+      //   console.log("No message content found.");
+      // }
 
-      //       let messages = [];
+            let messages = [];
 
-      //       messagesList.body.data.foreach((message) => {
-      //         messages.push(message.content);
-      //       });
+            messagesList.data.foreach((message) => {
+              messages.push(message.content);
+            });
+      
+      console.log("messages: ", messages)
 
-      // res.json({ messages });
+      res.json({ messages });
     }
   } catch (error) {
     throw error;
