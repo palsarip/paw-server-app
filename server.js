@@ -368,7 +368,7 @@ async function addMessage(threadId, message) {
     url: `
 https://api.openai.com/v1/threads/${threadId}/messages`,
     headers: {
-      "Content-Type": "application/jspon",
+      "Content-Type": "application/json",
       Authorization: `Bearer ${OPENAI_API_KEY}`,
       "OpenAI-Beta": "assistants=v2",
     },
@@ -378,6 +378,8 @@ https://api.openai.com/v1/threads/${threadId}/messages`,
     },
   });
 
+  console.log("addMessage: ", response)
+  
   return response;
 }
 
@@ -388,7 +390,7 @@ async function runAssistant(threadId) {
     url: `
 https://api.openai.com/v1/threads/${threadId}/runs`,
     headers: {
-      "Content-Type": "application/jspon",
+      "Content-Type": "application/json",
       Authorization: `Bearer ${OPENAI_API_KEY}`,
       "OpenAI-Beta": "assistants=v2",
     },
@@ -397,7 +399,7 @@ https://api.openai.com/v1/threads/${threadId}/runs`,
     },
   });
 
-  console.log(response);
+  console.log("runAssistant ID: ", response);
 
   return response;
 }
@@ -408,7 +410,7 @@ async function checkingStatus(res, threadId, runId) {
     url: `
 https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
     headers: {
-      "Content-Type": "application/jspon",
+      "Content-Type": "application/json",
       Authorization: `Bearer ${OPENAI_API_KEY}`,
       "OpenAI-Beta": "assistants=v2",
     },
@@ -428,7 +430,7 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
       method: "GET",
       url: `https://api.openai.com/v1/threads/${threadId}/messages`,
       headers: {
-        "Content-Type": "application/jspon",
+        "Content-Type": "application/json",
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         "OpenAI-Beta": "assistants=v2",
       },
@@ -492,7 +494,9 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        addMessage(userData.threadId, message).then((message) => {
+        const userPrompt = message?.text.body
+        
+        addMessage(userData.threadId, userPrompt).then((userPrompt) => {
           runAssistant(userData.threadId).then((run) => {
             const runId = run.id;
 
