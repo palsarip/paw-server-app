@@ -218,7 +218,7 @@ const chatWithPAW = async (
         interactive: {
           type: "button",
           body: {
-            text: yangMauDikirim,
+            text: `${yangMauDikirim}`,
           },
           action: {
             buttons: [
@@ -248,7 +248,7 @@ const chatWithPAW = async (
       },
     });
   } catch (error) {
-    console.log("error dari function initialChatWithPAW: ", error.message);
+    console.log("error dari function chatWithPAW: ", error.message);
   }
 };
 
