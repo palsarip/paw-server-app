@@ -17,7 +17,7 @@ const {
   PORT,
   CLOUD_API_VERSION,
   OPENAI_API_KEY,
-  OPENAI_ASSISTANT_ID
+  OPENAI_ASSISTANT_ID,
 } = process.env;
 
 /* Variables */
@@ -29,6 +29,8 @@ let userList = [
     from: "",
   },
 ];
+
+let pollingInterval;
 
 /* Functions */
 
@@ -346,10 +348,12 @@ async function createThread() {
     url: `
 https://api.openai.com/v1/threads`,
     headers: {
+      "Content-Type": "application/jspon",
       Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "OpenAI-Beta": "assistants=v2",
     },
   });
-  
+
   return thread;
 }
 
@@ -360,38 +364,80 @@ async function addMessage(threadId, message) {
     url: `
 https://api.openai.com/v1/threads/${threadId}/messages`,
     headers: {
+      "Content-Type": "application/jspon",
       Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "OpenAI-Beta": "assistants=v2",
     },
     data: {
       role: "user",
       content: message,
     },
   });
-  
-return response;
+
+  return response;
 }
 
 async function runAssistant(threadId) {
-  console.log("Running assistant for thread: " + threadId)
-    const response = await axios({
+  console.log("Running assistant for thread: " + threadId);
+  const response = await axios({
     method: "POST",
     url: `
 https://api.openai.com/v1/threads/${threadId}/runs`,
     headers: {
+      "Content-Type": "application/jspon",
       Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "OpenAI-Beta": "assistants=v2",
     },
     data: {
       assistant_id: OPENAI_ASSISTANT_ID,
     },
   });
-  
-  console.log(response)
-  
+
+  console.log(response);
+
   return response;
 }
 
 async function checkingStatus(res, threadId, runId) {
-  const runObject = await axios
+  const runObject = await axios({
+    method: "GET",
+    url: `
+https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
+    headers: {
+      "Content-Type": "application/jspon",
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "OpenAI-Beta": "assistants=v2",
+    },
+    data: {
+      assistant_id: OPENAI_ASSISTANT_ID,
+    },
+  });
+
+  const status = runObject.status;
+  console.log(runObject);
+  console.log("Current status: " + status);
+
+  if (status == "completed") {
+    clearInterval(pollingInterval);
+
+    const messagesList = await axios({
+      method: "GET",
+      url: `https://api.openai.com/v1/threads/${threadId}/messages`,
+      headers: {
+        "Content-Type": "application/jspon",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "OpenAI-Beta": "assistants=v2",
+      },
+    });
+
+    let messages = [];
+
+    messagesList.body.data.foreach((message) => {
+      messages.push(message.content);
+    });
+
+    res.json({ messages });
+  }
 }
 
 app.post("/webhook", async (req, res) => {
@@ -442,32 +488,16 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const AIrespond = openAIPrompt(message?.text.body);
-        const initialFetchedAIData = await axios({
-          method: "POST",
-          url: `https://api.openai.com/v1/chat/completions`,
-          headers: {
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          data: {
-            model: "gpt-3.5-turbo",
-            messages: [
-              {
-                role: "user",
-                content: message?.text.body,
-              },
-            ],
-            temperature: 0.7,
-          },
-        });
-        console.log(initialFetchedAIData.data.choices[0].message.content);
-        chatWithPAW(
-          message,
-          business_phone_number_id,
-          initialFetchedAIData.data.choices[0].message.content
-        );
+        const { message, threadId } = req.body;
+        addMessage(threadId, message).then((message) => {
+          runAssistant(threadId).then((run) => {
+            const runId = run.id;
 
-        // welcome(message,business_phone_number_id,AIrespond);
+            pollingInterval = setInterval(() => {
+              checkingStatus(res, threadId, runId);
+            }, 5000);
+          });
+        });
       }
 
       if (message?.type === "interactive") {
@@ -479,6 +509,9 @@ app.post("/webhook", async (req, res) => {
 
         if (buttonReplyId === "CHAT_WITH_PAW") {
           userData.chatWithPAW = true;
+          createThread().then((thread) => {
+            res.json({ threadId: thread.id });
+          });
           initialChatWithPAW(message, business_phone_number_id);
         }
       }
