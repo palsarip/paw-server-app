@@ -453,18 +453,18 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
       // } else {
       //   console.log("No message content found.");
       // }
-      
-      console.log("messagesList: ", messagesList.data.data[0].content[0].text.value)
 
-            let messages = [];
+      // console.log("messagesList: ", messagesList.data.data[0].content[0].text.value)
 
-           // messagesList.data.foreach((message) => {
-           //   messages.push(message.content);
-           // }); 
-      
-      console.log("messages: ", messages)
+//       let messages = [];
 
-     // res.json({ messages });
+//       messagesList.data.data.forEach((message) => {
+//         messages.push(message.content);
+//       });
+
+//       console.log("messages: ", messages);
+
+      return messagesList.data.data[0].content[0].text.value;
     }
   } catch (error) {
     throw error;
@@ -538,11 +538,15 @@ app.post("/webhook", async (req, res) => {
         console.log("runAssistant ID: ", runAssistantId);
 
         pollingInterval = setInterval(() => {
-          checkingStatus(res, userData.threadId, runAssistantId);
+          const checkingStatusValue = checkingStatus(
+            res,
+            userData.threadId,
+            runAssistantId
+          );
+          
+        console.log("checkingStatusValue: ", checkingStatusValue);
+          
         }, 5000);
-
-        // const checkingStatusValue = await checkingStatus(res, userData.threadId, runAssistantId)
-        //  console.log("checkingStatusValue: ", checkingStatusValue);
       }
 
       if (message?.type === "interactive") {
