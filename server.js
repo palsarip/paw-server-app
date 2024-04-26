@@ -342,9 +342,9 @@ const stopChatWithPAW = async (
 };
 
 async function createThread() {
-  console.log("Creating a new thread...");
-
   try {
+    console.log("Creating a new thread...");
+
     const response = await axios({
       method: "POST",
       url: "https://api.openai.com/v1/threads",
@@ -357,92 +357,105 @@ async function createThread() {
 
     return response.data.id;
   } catch (error) {
-    throw error; 
+    throw error;
   }
 }
 
 async function addMessage(threadId, message) {
-  console.log("Adding a new message to thread: " + threadId);
-  const response = await axios({
-    method: "POST",
-    url: `
+  try {
+    console.log("Adding a new message to thread: " + threadId);
+
+    const response = await axios({
+      method: "POST",
+      url: `
 https://api.openai.com/v1/threads/${threadId}/messages`,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "OpenAI-Beta": "assistants=v2",
-    },
-    data: {
-      role: "user",
-      content: message,
-    },
-  });
-
-  console.log("addMessage: ", response)
-  
-  return response;
-}
-
-async function runAssistant(threadId) {
-  console.log("Running assistant for thread: " + threadId);
-  const response = await axios({
-    method: "POST",
-    url: `
-https://api.openai.com/v1/threads/${threadId}/runs`,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "OpenAI-Beta": "assistants=v2",
-    },
-    data: {
-      assistant_id: OPENAI_ASSISTANT_ID,
-    },
-  });
-
-  console.log("runAssistant ID: ", response);
-
-  return response;
-}
-
-async function checkingStatus(res, threadId, runId) {
-  const runObject = await axios({
-    method: "GET",
-    url: `
-https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "OpenAI-Beta": "assistants=v2",
-    },
-    data: {
-      assistant_id: OPENAI_ASSISTANT_ID,
-    },
-  });
-
-  const status = runObject.status;
-  console.log(runObject);
-  console.log("Current status: " + status);
-
-  if (status == "completed") {
-    clearInterval(pollingInterval);
-
-    const messagesList = await axios({
-      method: "GET",
-      url: `https://api.openai.com/v1/threads/${threadId}/messages`,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         "OpenAI-Beta": "assistants=v2",
       },
+      data: {
+        role: "user",
+        content: message,
+      },
+    });
+    console.log("addMessage: ", response);
+
+    return response;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function runAssistant(threadId) {
+  try {
+    console.log("Running assistant for thread: " + threadId);
+
+    const response = await axios({
+      method: "POST",
+      url: `
+https://api.openai.com/v1/threads/${threadId}/runs`,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "OpenAI-Beta": "assistants=v2",
+      },
+      data: {
+        assistant_id: OPENAI_ASSISTANT_ID,
+      },
     });
 
-    let messages = [];
+    console.log("runAssistant ID: ", response);
 
-    messagesList.body.data.foreach((message) => {
-      messages.push(message.content);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function checkingStatus(res, threadId, runId) {
+  try {
+    const runObject = await axios({
+      method: "GET",
+      url: `
+https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "OpenAI-Beta": "assistants=v2",
+      },
+      data: {
+        assistant_id: OPENAI_ASSISTANT_ID,
+      },
     });
 
-    res.json({ messages });
+    const status = runObject.status;
+    console.log(runObject);
+    console.log("Current status: " + status);
+
+    if (status == "completed") {
+      clearInterval(pollingInterval);
+
+      const messagesList = await axios({
+        method: "GET",
+        url: `https://api.openai.com/v1/threads/${threadId}/messages`,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "OpenAI-Beta": "assistants=v2",
+        },
+      });
+
+      let messages = [];
+
+      messagesList.body.data.foreach((message) => {
+        messages.push(message.content);
+      });
+
+      res.json({ messages });
+    }
+  } catch (error) {
+    throw error;
   }
 }
 
@@ -494,17 +507,20 @@ app.post("/webhook", async (req, res) => {
           }
         }
 
-        const userPrompt = message?.text.body
-        
-        addMessage(userData.threadId, userPrompt).then((userPrompt) => {
-          runAssistant(userData.threadId).then((run) => {
-            const runId = run.id;
+        const userPrompt = message?.text.body;
 
-            pollingInterval = setInterval(() => {
-              checkingStatus(res, userData.threadId, runId);
-            }, 5000);
-          });
-        });
+//         addMessage(userData.threadId, userPrompt).then((userPrompt) => {
+//           runAssistant(userData.threadId).then((run) => {
+//             const runId = run.id;
+
+//             pollingInterval = setInterval(() => {
+//               checkingStatus(res, userData.threadId, runId);
+//             }, 5000);
+//           });
+//         });
+        
+        const addMessageValue = await addMessage(userData.threadId, userPrompt)
+        console.log(addMessageValue);
       }
 
       if (message?.type === "interactive") {
@@ -518,7 +534,6 @@ app.post("/webhook", async (req, res) => {
           userData.chatWithPAW = true;
           userData.threadId = await createThread();
           initialChatWithPAW(message, business_phone_number_id);
-          console.log(userData);
         }
       }
     }
