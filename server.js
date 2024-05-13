@@ -492,6 +492,7 @@ https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
 app.post("/webhook", async (req, res) => {
   try {
     const message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+    const contacts = req.body.entry?.[0]?.changes[0]?.value?.contacts?.[0];
 
     const business_phone_number_id =
       req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
@@ -519,7 +520,7 @@ app.post("/webhook", async (req, res) => {
       welcome(
         message,
         business_phone_number_id,
-        `Halo, ${message?.from}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`
+        `Halo, ${contacts?.profile.name}! Saya PAW, asisten virtual Anda di WhatsApp. Saya siap membantu Anda dengan berbagai pertanyaan dan tugas apa pun. Bagaimana saya dapat membantu Anda hari ini?`
       );
     } else {
       if (userData.chatWithPAW) {
